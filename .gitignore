@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+dist/
+build/
+*.zip
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local environment
+.env
+.env.local
+.wp-env.json

@@ -3,7 +3,7 @@
  * Plugin Name:       Vetra Dashboard
  * Plugin URI:        https://vetra.local/
  * Description:       A modern, fully-featured user dashboard and account panel for WordPress. Independent from WooCommerce. Includes tickets, notifications, polls, attachments, banking, wallet, SMS OTP auth and more.
- * Version:           1.2.0
+ * Version:           1.3.0
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Vetra
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'VTD_VERSION', '1.2.0' );
+define( 'VTD_VERSION', '1.3.0' );
 define( 'VTD_FILE', __FILE__ );
 define( 'VTD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'VTD_URL', plugin_dir_url( __FILE__ ) );

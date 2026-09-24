@@ -4,7 +4,7 @@ Tags: user dashboard, panel, tickets, sms, otp, profile, wallet, notifications
 Requires at least: 6.2
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 
 A modern, independent user dashboard and account panel for WordPress. No WooCommerce required.
@@ -59,3 +59,8 @@ Vetra Dashboard replaces the default WordPress profile experience with a complet
 * Added configurable panel menu items, avatar dropdown navigation and panel-content shortcodes.
 * Added a Persian translation layer for the user dashboard and messages.
 * Added an optional Digits login shortcode integration and visual email template editors with previews.
+
+= 1.3.0 =
+* Hardened all list screens and module queries against missing/corrupted plugin tables on PHP 8 (no more fatal errors).
+* Added friendly "no records" empty states to every admin management table.
+* Minor PHP 8 compatibility fixes for poll statistics and dashboard stats.

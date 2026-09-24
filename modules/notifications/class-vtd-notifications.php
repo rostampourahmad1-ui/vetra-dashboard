@@ -52,7 +52,8 @@ class VTD_Notifications {
 			$offset
 		);
 
-		return $wpdb->get_results( $sql );
+		$rows = $wpdb->get_results( $sql );
+		return is_array( $rows ) ? $rows : array();
 	}
 
 	public static function count( $user_id ) {

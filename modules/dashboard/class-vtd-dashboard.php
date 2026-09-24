@@ -30,13 +30,14 @@ class VTD_Dashboard {
 	public static function stats( $user_id ) {
 		global $wpdb;
 		$tickets = VTD_DB::tickets();
+		$polls   = VTD_Polls::get_polls();
 		$stats   = array(
 			'open_tickets'     => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$tickets} WHERE user_id = %d AND status NOT IN ('closed')", $user_id ) ),
 			'total_tickets'    => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$tickets} WHERE user_id = %d", $user_id ) ),
 			'unread_notifications' => VTD_Notifications::unread_count( $user_id ),
 			'wallet_balance'   => VTD_Options::get( 'wallet_enabled', 1 ) ? VTD_Wallet::format( VTD_Wallet::balance( $user_id ) ) : '',
 			'comments'         => (int) get_comments( array( 'user_id' => $user_id, 'count' => true, 'status' => 'any' ) ),
-			'polls'            => count( VTD_Polls::get_polls() ),
+			'polls'            => is_array( $polls ) ? count( $polls ) : 0,
 		);
 		return apply_filters( 'vtd_dashboard_stats', $stats, $user_id );
 	}

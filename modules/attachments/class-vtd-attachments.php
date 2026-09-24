@@ -24,7 +24,7 @@ class VTD_Attachments {
 		$roles = (array) get_userdata( $user_id )->roles;
 		$role  = ! empty( $roles ) ? $roles[0] : '';
 
-		return $wpdb->get_results(
+		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT DISTINCT a.* FROM {$table} a
 				LEFT JOIN {$map} m ON m.attachment_id = a.attachment_id
@@ -38,6 +38,7 @@ class VTD_Attachments {
 				$user_id
 			)
 		);
+		return is_array( $rows ) ? $rows : array();
 	}
 
 	public static function files( $attachment ) {

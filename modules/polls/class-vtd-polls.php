@@ -17,7 +17,8 @@ class VTD_Polls {
 		global $wpdb;
 		$table = VTD_DB::polls();
 		$where = $only_active ? 'WHERE poll_status = 1' : '';
-		return $wpdb->get_results( "SELECT * FROM {$table} {$where} ORDER BY poll_id DESC" );
+		$rows  = $wpdb->get_results( "SELECT * FROM {$table} {$where} ORDER BY poll_id DESC" );
+		return is_array( $rows ) ? $rows : array();
 	}
 
 	public static function get_poll( $poll_id ) {
@@ -34,9 +35,10 @@ class VTD_Polls {
 	public static function user_answer( $poll_id, $user_id ) {
 		global $wpdb;
 		$table = VTD_DB::poll_answers();
-		return $wpdb->get_results(
+		$rows  = $wpdb->get_results(
 			$wpdb->prepare( "SELECT user_choice FROM {$table} WHERE poll_id = %d AND user_id = %d", $poll_id, $user_id )
 		);
+		return is_array( $rows ) ? $rows : array();
 	}
 
 	public static function has_voted( $poll_id, $user_id ) {
@@ -88,8 +90,10 @@ class VTD_Polls {
 			$wpdb->prepare( "SELECT user_choice, COUNT(*) AS total FROM {$table} WHERE poll_id = %d GROUP BY user_choice", $poll_id )
 		);
 		$out = array();
-		foreach ( $rows as $row ) {
-			$out[ (string) $row->user_choice ] = (int) $row->total;
+		if ( is_array( $rows ) ) {
+			foreach ( $rows as $row ) {
+				$out[ (string) $row->user_choice ] = (int) $row->total;
+			}
 		}
 		return $out;
 	}

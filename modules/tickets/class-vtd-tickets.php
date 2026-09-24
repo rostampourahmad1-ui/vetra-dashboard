@@ -49,7 +49,9 @@ class VTD_Tickets {
 
 	public static function departments() {
 		global $wpdb;
-		return $wpdb->get_results( "SELECT * FROM " . VTD_DB::departments() . " ORDER BY parent_id ASC, department_id ASC" );
+		$table = VTD_DB::departments();
+		$rows  = $wpdb->get_results( "SELECT * FROM " . $table . " ORDER BY parent_id ASC, department_id ASC" );
+		return is_array( $rows ) ? $rows : array();
 	}
 
 	public static function department_name( $id ) {
@@ -67,9 +69,11 @@ class VTD_Tickets {
 		);
 		$counts = array_fill_keys( array_keys( self::statuses() ), 0 );
 		$total  = 0;
-		foreach ( $rows as $row ) {
-			$counts[ $row->status ] = (int) $row->total;
-			$total                 += (int) $row->total;
+		if ( is_array( $rows ) ) {
+			foreach ( $rows as $row ) {
+				$counts[ $row->status ] = (int) $row->total;
+				$total                 += (int) $row->total;
+			}
 		}
 		$counts['all'] = $total;
 		return $counts;
@@ -129,6 +133,7 @@ class VTD_Tickets {
 		$list_sql = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
 		$list_params = array_merge( $params, array( (int) $args['per_page'], $offset ) );
 		$items    = $wpdb->get_results( $wpdb->prepare( $list_sql, $list_params ) );
+		$items    = is_array( $items ) ? $items : array();
 
 		return array( 'items' => $items, 'total' => $total );
 	}
@@ -142,7 +147,8 @@ class VTD_Tickets {
 		global $wpdb;
 		$table = VTD_DB::ticket_replies();
 		$where = $include_internal ? '' : ' AND is_internal = 0';
-		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE ticket_id = %d{$where} ORDER BY reply_id ASC", $ticket_id ) );
+		$rows  = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE ticket_id = %d{$where} ORDER BY reply_id ASC", $ticket_id ) );
+		return is_array( $rows ) ? $rows : array();
 	}
 
 	public static function can_view( $user_id, $ticket ) {
@@ -511,8 +517,11 @@ class VTD_Tickets {
 		$counts = array( 'all' => $result['total'] );
 		global $wpdb;
 		$table = VTD_DB::tickets();
-		foreach ( $wpdb->get_results( "SELECT status, COUNT(*) AS total FROM {$table} GROUP BY status" ) as $row ) {
-			$counts[ $row->status ] = (int) $row->total;
+		$rows  = $wpdb->get_results( "SELECT status, COUNT(*) AS total FROM {$table} GROUP BY status" );
+		if ( is_array( $rows ) ) {
+			foreach ( $rows as $row ) {
+				$counts[ $row->status ] = (int) $row->total;
+			}
 		}
 
 		return VTD_Templates::module(

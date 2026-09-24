@@ -98,9 +98,10 @@ class VTD_Wallet {
 	public static function transactions( $user_id, $limit = 20 ) {
 		global $wpdb;
 		$table = VTD_DB::transactions();
-		return $wpdb->get_results(
+		$rows  = $wpdb->get_results(
 			$wpdb->prepare( "SELECT * FROM {$table} WHERE user_id = %d ORDER BY tx_id DESC LIMIT %d", $user_id, $limit )
 		);
+		return is_array( $rows ) ? $rows : array();
 	}
 
 	public static function request_withdrawal( $user_id, $amount, $card_id, $note = '' ) {
@@ -180,9 +181,10 @@ class VTD_Wallet {
 	public static function withdrawals( $user_id, $limit = 20 ) {
 		global $wpdb;
 		$table = VTD_DB::withdrawals();
-		return $wpdb->get_results(
+		$rows  = $wpdb->get_results(
 			$wpdb->prepare( "SELECT * FROM {$table} WHERE user_id = %d ORDER BY id DESC LIMIT %d", $user_id, $limit )
 		);
+		return is_array( $rows ) ? $rows : array();
 	}
 
 	public static function render() {

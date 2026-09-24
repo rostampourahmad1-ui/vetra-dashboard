@@ -59,6 +59,7 @@ class VTD_Settings {
 			'Withdrawals' => 'برداشت‌ها', 'SMS Log' => 'گزارش پیامک‌ها', 'Users' => 'کاربران', 'Vetra' => 'وترا',
 			'Vetra Dashboard' => 'پیشخوان وترا', 'You do not have permission to access this page.' => 'شما اجازه دسترسی به این صفحه را ندارید.',
 			'Tickets' => 'تیکت‌ها', 'Support Departments' => 'دپارتمان‌های پشتیبانی', 'Withdrawal Requests' => 'درخواست‌های برداشت',
+			'No records found.' => 'موردی یافت نشد.', 'Search' => 'جست‌وجو', 'Filter' => 'فیلتر',
 			'Wallets' => 'کیف‌پول‌ها', 'Vetra Overview' => 'نمای کلی وترا', 'Total tickets' => 'مجموع تیکت‌ها',
 			'Open tickets' => 'تیکت‌های باز', 'Pending cards' => 'کارت‌های در انتظار بررسی', 'Pending withdrawals' => 'برداشت‌های در انتظار',
 			'SMS sent' => 'پیامک‌های ارسال‌شده', 'The operation was successful.' => 'عملیات با موفقیت انجام شد.',

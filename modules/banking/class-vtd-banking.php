@@ -52,7 +52,8 @@ class VTD_Banking {
 	public static function get_cards( $user_id ) {
 		global $wpdb;
 		$table = VTD_DB::cards();
-		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE user_id = %d ORDER BY card_id DESC", $user_id ) );
+		$rows  = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE user_id = %d ORDER BY card_id DESC", $user_id ) );
+		return is_array( $rows ) ? $rows : array();
 	}
 
 	public static function get_card( $card_id ) {

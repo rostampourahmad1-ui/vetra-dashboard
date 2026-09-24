@@ -58,7 +58,7 @@ defined( 'ABSPATH' ) || exit;
 					<?php foreach ( $withdrawals as $withdrawal ) : ?>
 						<li>
 							<span><?php echo esc_html( VTD_Wallet::format( $withdrawal->amount ) ); ?></span>
-							<span class="vtd-pill vtd-status-<?php echo 'approved' === $withdrawal->status ? 'closed' : ( 'rejected' === $withdrawal->status ? 'open' : 'pending' ); ?>"><?php echo esc_html( $withdrawal->status ); ?></span>
+							<span class="vtd-pill vtd-status-<?php echo 'approved' === $withdrawal->status || 'paid' === $withdrawal->status ? 'closed' : ( 'rejected' === $withdrawal->status ? 'open' : 'pending' ); ?>"><?php echo esc_html( VTD_Wallet::withdrawal_status_label( $withdrawal->status ) ); ?></span>
 							<time><?php echo esc_html( vtd_date_i18n( $withdrawal->created_at ) ); ?></time>
 						</li>
 					<?php endforeach; ?>

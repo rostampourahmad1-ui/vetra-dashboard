@@ -20,6 +20,10 @@ Vetra Dashboard replaces the default WordPress profile experience with a polishe
 - **Templated transactional emails**
 - **Modern UI**: RTL-first, automatic dark mode, responsive, full-width panel template
 - **Persian admin experience**: redesigned right-to-left settings screens, Persian dashboard navigation and Jalali date entry/display
+- **Custom dashboard extensions**: configure menu items as external links, WordPress pages, shortcodes, or safe HTML/block content
+- **Avatar dropdown**: configurable account menu in the dashboard top bar
+- **Optional Digits login**: embed a configured Digits shortcode, with Vetra SMS OTP available as the native option
+- **Visual email design**: rich-text editors for shared email chrome and each transactional email, with authenticated previews
 - **GPL-2.0-or-later** licensed, no encrypted or obfuscated code
 
 ## Requirements
@@ -45,6 +49,26 @@ Persian date fields are entered and displayed in the Jalali calendar; dates are 
 | `[vetra_register]` | Registration form |
 | `[vetra_reset_password]` | Password reset |
 | `[vetra_profile_links]` | Compact account links widget |
+| `[vetra_panel_menu]` | Persian navigation links for the current dashboard sections |
+| `[vetra_panel_section id="reports"]` | Render a registered dashboard section on another WordPress page |
+
+## Extending the dashboard
+
+Other plugins can register a PHP-rendered section without editing Vetra files:
+
+```php
+add_action( 'plugins_loaded', function () {
+	 vtd_register_panel_section( 'reports', array(
+		 'label'    => 'گزارش‌ها',
+		 'icon'     => 'dashboard',
+		 'callback' => function () {
+			 return '<div class="vtd-card">گزارش افزونهٔ من</div>';
+		 },
+	 ) );
+} );
+```
+
+The registration callback must return renderable content. The settings screen can add links, WordPress pages, shortcode output, or sanitized HTML/block content to the dashboard menu. This supports shortcodes and trusted plugin integrations without evaluating PHP entered in settings.
 
 ## SMS (IPPanel)
 

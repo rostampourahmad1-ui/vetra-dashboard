@@ -142,11 +142,11 @@
 			return;
 		}
 		if (!items.length) {
-			list.innerHTML = '<div class="vtd-notify-loading">' + (i18n.empty || "—") + "</div>";
+			list.innerHTML = '<div class="vtd-notify-loading">' + (i18n.empty || "اعلانی وجود ندارد.") + "</div>";
 			return;
 		}
 		list.innerHTML = items.map(function (item) {
-			var link = item.link ? '<a class="vtd-link" href="' + item.link + '">' + (i18n.view || "view") + "</a>" : "";
+			var link = item.link ? '<a class="vtd-link" href="' + item.link + '">' + (i18n.view || "مشاهده") + "</a>" : "";
 			return '<div class="vtd-notify-item ' + (item.read ? "" : "is-unread") + '">' +
 				'<div><h4>' + item.title + '</h4><div class="vtd-notify-body">' + item.content + "</div>" +
 				'<div class="vtd-notify-meta"><span>' + item.ago + "</span>" + link + "</div></div></div>";
@@ -196,7 +196,7 @@
 					setMessage(msg, "تاریخ را به‌صورت شمسی و با قالب سال/ماه/روز وارد کنید.", false);
 					return;
 				}
-				setMessage(msg, i18n.loading || "...", true);
+				setMessage(msg, i18n.loading || "در حال بارگذاری…", true);
 				request("profile", { data: formData(form) }).then(function (response) {
 					setMessage(msg, response.message || i18n.saved, !!response.success);
 				});
@@ -250,7 +250,7 @@
 
 		var closeBtn = document.querySelector("[data-vtd-ticket-close]");
 		closeBtn && closeBtn.addEventListener("click", function () {
-			if (!window.confirm(i18n.confirm || "?")) {
+			if (!window.confirm(i18n.confirm || "آیا مطمئن هستید؟")) {
 				return;
 			}
 			var ticketId = document.querySelector("[data-vtd-ticket]").getAttribute("data-vtd-ticket");
@@ -274,7 +274,7 @@
 			var data = formData(rateForm);
 			data.ticket_id = ticketId;
 			request("tickets/rate", { data: data }).then(function () {
-				rateForm.innerHTML = '<span class="vtd-chip is-ok">' + (i18n.saved || "ok") + "</span>";
+				rateForm.innerHTML = '<span class="vtd-chip is-ok">' + (i18n.saved || "ثبت شد") + "</span>";
 			});
 		});
 
@@ -321,7 +321,7 @@
 
 		document.querySelectorAll("[data-vtd-card-delete]").forEach(function (button) {
 			button.addEventListener("click", function () {
-				if (!window.confirm(i18n.confirm || "?")) {
+			if (!window.confirm(i18n.confirm || "آیا مطمئن هستید؟")) {
 					return;
 				}
 				request("banking/cards/delete", { data: { card_id: button.getAttribute("data-vtd-card-delete") } }).then(function () {
@@ -362,12 +362,27 @@
 		});
 	}
 
+	function initUserMenu() {
+		document.addEventListener("click", function (event) {
+			document.querySelectorAll("[data-vtd-user-menu][open]").forEach(function (menu) {
+				if (!menu.contains(event.target)) {
+					menu.removeAttribute("open");
+				}
+			});
+		});
+		document.addEventListener("keydown", function (event) {
+			if (event.key === "Escape") {
+				document.querySelectorAll("[data-vtd-user-menu][open]").forEach(function (menu) { menu.removeAttribute("open"); });
+			}
+		});
+	}
+
 	function initResend() {
 		document.querySelectorAll("[data-vtd-resend]").forEach(function (button) {
 			button.addEventListener("click", function () {
 				var phone = button.getAttribute("data-phone");
 				request("otp/send", { data: { phone: phone, purpose: "login" } }).then(function (response) {
-					button.textContent = response.message || (i18n.saved || "ok");
+					button.textContent = response.message || (i18n.saved || "ثبت شد");
 				});
 			});
 		});
@@ -381,5 +396,6 @@
 		initForms();
 		initResend();
 		initModal();
+		initUserMenu();
 	});
 })();

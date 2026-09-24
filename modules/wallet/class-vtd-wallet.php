@@ -38,6 +38,16 @@ class VTD_Wallet {
 		return number_format_i18n( (float) $amount ) . ' ' . $currency;
 	}
 
+	public static function withdrawal_status_label( $status ) {
+		$labels = array(
+			'pending'  => __( 'Pending', 'vetra-dashboard' ),
+			'approved' => __( 'Approved', 'vetra-dashboard' ),
+			'paid'     => __( 'Paid', 'vetra-dashboard' ),
+			'rejected' => __( 'Rejected', 'vetra-dashboard' ),
+		);
+		return $labels[ $status ] ?? $status;
+	}
+
 	public static function add_transaction( $user_id, $amount, $type, $details = '', $created_by = 0 ) {
 		global $wpdb;
 		$amount  = (float) $amount;

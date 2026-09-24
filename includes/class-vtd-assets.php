@@ -78,6 +78,8 @@ class VTD_Assets {
 					'loading'    => __( 'Loading...', 'vetra-dashboard' ),
 					'confirm'    => __( 'Are you sure?', 'vetra-dashboard' ),
 					'copied'     => __( 'Copied', 'vetra-dashboard' ),
+					'empty'      => __( 'No notifications yet.', 'vetra-dashboard' ),
+					'view'       => __( 'View', 'vetra-dashboard' ),
 				),
 			)
 		);
@@ -125,7 +127,7 @@ class VTD_Assets {
 		if ( ! $post || empty( $post->post_content ) ) {
 			return false;
 		}
-		foreach ( array( 'vetra_dashboard', 'vetra_login', 'vetra_register', 'vetra_reset_password', 'vetra_profile_links' ) as $shortcode ) {
+		foreach ( array( 'vetra_dashboard', 'vetra_login', 'vetra_register', 'vetra_reset_password', 'vetra_profile_links', 'vetra_panel_section', 'vetra_panel_menu' ) as $shortcode ) {
 			if ( has_shortcode( $post->post_content, $shortcode ) ) {
 				return true;
 			}

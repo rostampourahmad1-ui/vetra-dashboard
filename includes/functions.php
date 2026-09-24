@@ -51,6 +51,11 @@ function vtd_reset_url() {
 	return VTD_Router::reset_url();
 }
 
+/** Register a dashboard area from another plugin or theme. */
+function vtd_register_panel_section( $slug, $args ) {
+	return VTD_Router::register_section( $slug, $args );
+}
+
 function vtd_current_user_name( $user_id = 0 ) {
 	$user_id = $user_id ? (int) $user_id : get_current_user_id();
 	$user    = get_userdata( $user_id );

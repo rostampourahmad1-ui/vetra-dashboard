@@ -12,6 +12,9 @@ $vtd_modal    = ! empty( $vtd_modal );
 $vtd_stage    = VTD_Auth::$stage;
 $vtd_otp      = (bool) ( $vtd_settings['otp_login'] ?? 1 );
 $vtd_pass     = (bool) ( $vtd_settings['password_login'] ?? 1 );
+$vtd_digits   = 'digits' === ( $vtd_settings['otp_login_provider'] ?? 'native' );
+$vtd_digits_tag = sanitize_key( $vtd_settings['digits_shortcode'] ?? 'digits' );
+$vtd_digits_ready = $vtd_digits && $vtd_digits_tag && shortcode_exists( $vtd_digits_tag );
 ?>
 <div class="vtd-auth-card<?php echo $vtd_modal ? ' is-modal' : ''; ?>">
 	<?php if ( ! $vtd_modal ) : ?>
@@ -28,6 +31,18 @@ $vtd_pass     = (bool) ( $vtd_settings['password_login'] ?? 1 );
 		<div class="vtd-alert vtd-alert-success"><?php echo esc_html( $vtd_message ); ?></div>
 	<?php endforeach; ?>
 
+	<?php if ( $vtd_digits ) : ?>
+		<?php if ( $vtd_digits_ready ) : ?>
+			<div class="vtd-digits-login" dir="rtl"><?php echo do_shortcode( '[' . $vtd_digits_tag . ']' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+		<?php else : ?>
+			<div class="vtd-alert vtd-alert-error">افزونهٔ Digits یا شورت‌کد انتخاب‌شده فعال نیست؛ فرم ورود داخلی وترا به‌عنوان جایگزین نمایش داده شده است.</div>
+			<?php if ( ! empty( $vtd_settings['digits_login_page'] ) && get_post_status( (int) $vtd_settings['digits_login_page'] ) ) : ?>
+				<p><a class="vtd-link" href="<?php echo esc_url( get_permalink( (int) $vtd_settings['digits_login_page'] ) ); ?>">رفتن به صفحهٔ ورود Digits</a></p>
+			<?php endif; ?>
+		<?php endif; ?>
+	<?php endif; ?>
+
+	<?php if ( ! $vtd_digits_ready ) : ?>
 	<?php if ( 'otp' === $vtd_stage ) : ?>
 		<form class="vtd-form" method="post" data-vtd-form>
 			<input type="hidden" name="vtd_auth_action" value="otp_verify">
@@ -84,8 +99,9 @@ $vtd_pass     = (bool) ( $vtd_settings['password_login'] ?? 1 );
 			</div>
 		<?php endif; ?>
 	<?php endif; ?>
+	<?php endif; ?>
 
-	<?php if ( ! $vtd_modal && ! empty( $vtd_settings['register_enabled'] ) ) : ?>
+	<?php if ( ! $vtd_modal && ! $vtd_digits_ready && ! empty( $vtd_settings['register_enabled'] ) ) : ?>
 		<p class="vtd-auth-foot">
 			<?php esc_html_e( 'Do not have an account?', 'vetra-dashboard' ); ?>
 			<a class="vtd-link" href="<?php echo esc_url( VTD_Router::register_url() ); ?>"><?php esc_html_e( 'Create one', 'vetra-dashboard' ); ?></a>

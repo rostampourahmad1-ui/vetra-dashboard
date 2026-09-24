@@ -147,6 +147,8 @@ class VTD_Settings {
 				),
 				'after_register_page' => array( 'label' => __( 'Redirect after registration (page)', 'vetra-dashboard' ), 'type' => 'page' ),
 				'dashboard_shortcuts' => array( 'label' => __( 'Dashboard shortcuts', 'vetra-dashboard' ), 'type' => 'shortcuts' ),
+				'dashboard_menu_custom' => array( 'label' => 'آیتم‌های سفارشی منوی داشبورد', 'type' => 'panel_menu_builder' ),
+				'avatar_menu_items' => array( 'label' => 'آیتم‌های منوی آواتار', 'type' => 'avatar_menu_builder' ),
 			),
 			'design'   => array(
 				'primary_color' => array( 'label' => __( 'Primary color', 'vetra-dashboard' ), 'type' => 'color' ),
@@ -164,6 +166,9 @@ class VTD_Settings {
 				'email_login'         => array( 'label' => __( 'Email login', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'phone_login'         => array( 'label' => __( 'Phone login', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'otp_login'           => array( 'label' => __( 'OTP login', 'vetra-dashboard' ), 'type' => 'switch' ),
+				'otp_login_provider'  => array( 'label' => 'روش ورود پیامکی', 'type' => 'select', 'options' => array( 'native' => 'پیامک داخلی وترا', 'digits' => 'افزونه Digits' ) ),
+				'digits_shortcode'    => array( 'label' => 'نامک شورت‌کد ورود Digits', 'type' => 'text' ),
+				'digits_login_page'   => array( 'label' => 'برگه جایگزین ورود Digits', 'type' => 'page' ),
 				'password_login'      => array( 'label' => __( 'Password login', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'login_modal'         => array( 'label' => __( 'Login modal in theme', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'email_verify'        => array( 'label' => __( 'Verify email on signup', 'vetra-dashboard' ), 'type' => 'switch' ),
@@ -230,8 +235,13 @@ class VTD_Settings {
 				'email_from_email' => array( 'label' => __( 'From email', 'vetra-dashboard' ), 'type' => 'text' ),
 				'email_on_ticket'  => array( 'label' => __( 'Email on new ticket', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'email_on_signup'  => array( 'label' => __( 'Email on signup', 'vetra-dashboard' ), 'type' => 'switch' ),
-				'email_header'     => array( 'label' => __( 'Email header', 'vetra-dashboard' ), 'type' => 'textarea' ),
-				'email_footer'     => array( 'label' => __( 'Email footer', 'vetra-dashboard' ), 'type' => 'textarea' ),
+				'email_header'     => array( 'label' => __( 'Email header', 'vetra-dashboard' ), 'type' => 'editor' ),
+				'email_template_welcome' => array( 'label' => 'طراحی ایمیل خوش‌آمدگویی', 'type' => 'editor' ),
+				'email_template_ticket_created' => array( 'label' => 'طراحی ایمیل ثبت تیکت', 'type' => 'editor' ),
+				'email_template_ticket_reply' => array( 'label' => 'طراحی ایمیل پاسخ تیکت', 'type' => 'editor' ),
+				'email_template_card_status' => array( 'label' => 'طراحی ایمیل وضعیت کارت بانکی', 'type' => 'editor' ),
+				'email_template_withdrawal_status' => array( 'label' => 'طراحی ایمیل وضعیت برداشت', 'type' => 'editor' ),
+				'email_footer'     => array( 'label' => __( 'Email footer', 'vetra-dashboard' ), 'type' => 'editor' ),
 			),
 			'advanced' => array(
 				'delete_data_on_uninstall' => array( 'label' => __( 'Delete all data on uninstall', 'vetra-dashboard' ), 'type' => 'switch' ),
@@ -326,6 +336,25 @@ class VTD_Settings {
 			case 'textarea':
 				printf( '<textarea id="%1$s" name="%2$s" rows="4" class="large-text">%3$s</textarea>', esc_attr( $id ), esc_attr( $name ), esc_textarea( (string) $value ) );
 				break;
+			case 'editor':
+				wp_editor(
+					(string) $value,
+					'vtd-editor-' . sanitize_key( $key ),
+					array(
+						'textarea_name' => $name,
+						'textarea_rows' => 9,
+						'media_buttons' => false,
+						'teeny'         => false,
+						'quicktags'     => true,
+						'tinymce'       => array( 'toolbar1' => 'formatselect,bold,italic,bullist,numlist,link,unlink,undo,redo', 'directionality' => 'rtl' ),
+					)
+				);
+				if ( 0 === strpos( $key, 'email_template_' ) ) {
+					echo '<p class="description vtd-email-tokens">متغیرهای قابل استفاده: {{user_name}}، {{site_name}}، {{ticket_id}}، {{ticket_title}}، {{action_url}}، {{status}} و {{amount}}</p>';
+					$preview_url = wp_nonce_url( add_query_arg( array( 'action' => 'vtd_email_preview', 'template' => $key ), admin_url( 'admin-post.php' ) ), 'vtd_email_preview_' . $key );
+					echo '<a class="button vtd-email-preview" target="_blank" rel="noopener" href="' . esc_url( $preview_url ) . '">پیش‌نمایش قالب</a>';
+				}
+				break;
 			case 'select':
 				echo '<select id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '">';
 				foreach ( $field['options'] as $opt_key => $opt_label ) {
@@ -383,8 +412,17 @@ class VTD_Settings {
 				echo '<button type="button" class="button vtd-repeater-add">' . esc_html__( 'Add shortcut', 'vetra-dashboard' ) . '</button>';
 				echo '</div>';
 				break;
+			case 'panel_menu_builder':
+				self::menu_builder( $name, (array) $value, 'panel' );
+				break;
+			case 'avatar_menu_builder':
+				self::menu_builder( $name, (array) $value, 'avatar' );
+				break;
 			default:
 				printf( '<input type="text" id="%1$s" name="%2$s" value="%3$s" class="regular-text">', esc_attr( $id ), esc_attr( $name ), esc_attr( $value ) );
+				if ( 'digits_shortcode' === $key ) {
+					echo '<p class="description">افزونهٔ Digits باید نصب و فعال باشد؛ فقط نام شورت‌کد را وارد کنید (پیش‌فرض: digits). تنظیمات پیامک و OTP خود Digits نیز باید کامل باشد.</p>';
+				}
 		}
 	}
 
@@ -398,6 +436,77 @@ class VTD_Settings {
 		echo '</div>';
 		echo '<button type="button" class="button vtd-repeater-add">' . esc_html__( 'Add field', 'vetra-dashboard' ) . '</button>';
 		echo '</div>';
+	}
+
+	protected static function menu_builder( $name, $rows, $kind ) {
+		$repeater = 'avatar' === $kind ? 'avatar_menu' : 'panel_menu';
+		$option   = 'avatar' === $kind ? 'avatar_menu_items' : 'dashboard_menu_custom';
+		if ( empty( $rows ) ) {
+			$rows = array( array() );
+		}
+		echo '<div class="vtd-repeater vtd-menu-builder" data-repeater="' . esc_attr( $repeater ) . '" data-repeater-name="' . esc_attr( $option ) . '">';
+		echo '<div class="vtd-repeater-rows">';
+		foreach ( array_values( $rows ) as $index => $row ) {
+			self::menu_builder_row( $name, $index, $row, $kind );
+		}
+		echo '</div><button type="button" class="button vtd-repeater-add">' . ( 'avatar' === $kind ? 'افزودن آیتم منوی آواتار' : 'افزودن آیتم به منوی داشبورد' ) . '</button>';
+		if ( 'panel' === $kind ) {
+			echo '<p class="description">آیتم‌ها می‌توانند پیوند، برگهٔ وردپرس، شورت‌کد یا محتوای ترکیبی باشند. برای اتصال کد افزونه‌ها از تابع <code>vtd_register_panel_section()</code> استفاده کنید.</p>';
+		}
+		echo '</div>';
+	}
+
+	protected static function menu_builder_row( $name, $index, $row, $kind ) {
+		$row = wp_parse_args(
+			(array) $row,
+			array(
+				'label' => '', 'slug' => '', 'icon' => 'default', 'type' => 'link', 'url' => '',
+				'page_id' => 0, 'shortcode' => '', 'content' => '', 'enabled' => 1,
+			)
+		);
+		?>
+		<div class="vtd-repeater-row vtd-menu-builder-row" data-menu-kind="<?php echo esc_attr( $kind ); ?>">
+			<div class="vtd-menu-builder-main">
+				<input type="text" name="<?php echo esc_attr( $name . '[' . $index . '][label]' ); ?>" value="<?php echo esc_attr( $row['label'] ); ?>" placeholder="عنوان آیتم" aria-label="عنوان آیتم">
+				<input type="text" name="<?php echo esc_attr( $name . '[' . $index . '][slug]' ); ?>" value="<?php echo esc_attr( $row['slug'] ); ?>" placeholder="شناسه انگلیسی، مانند reports" aria-label="شناسه">
+				<input type="text" name="<?php echo esc_attr( $name . '[' . $index . '][icon]' ); ?>" value="<?php echo esc_attr( $row['icon'] ); ?>" placeholder="نام آیکون" aria-label="نام آیکون">
+				<?php if ( 'panel' === $kind ) : ?>
+					<select name="<?php echo esc_attr( $name . '[' . $index . '][type]' ); ?>" data-vtd-menu-type aria-label="نوع آیتم">
+						<option value="link" <?php selected( $row['type'], 'link' ); ?>>پیوند</option>
+						<option value="page" <?php selected( $row['type'], 'page' ); ?>>برگهٔ وردپرس</option>
+						<option value="shortcode" <?php selected( $row['type'], 'shortcode' ); ?>>شورت‌کد</option>
+						<option value="content" <?php selected( $row['type'], 'content' ); ?>>محتوا / بلوک</option>
+					</select>
+				<?php endif; ?>
+				<label class="vtd-menu-enabled"><input class="vtd-menu-enabled-checkbox" type="checkbox" name="<?php echo esc_attr( $name . '[' . $index . '][enabled]' ); ?>" value="1" <?php checked( ! empty( $row['enabled'] ) ); ?>> نمایش</label>
+				<button type="button" class="button vtd-repeater-remove" aria-label="حذف آیتم">&times;</button>
+			</div>
+			<?php if ( 'panel' === $kind ) : ?>
+				<div class="vtd-menu-builder-details">
+					<div class="vtd-menu-type-field" data-menu-field="link">
+						<label>نشانی پیوند<input type="url" name="<?php echo esc_attr( $name . '[' . $index . '][url]' ); ?>" value="<?php echo esc_attr( $row['url'] ); ?>" placeholder="https://example.com"></label>
+					</div>
+					<div class="vtd-menu-type-field" data-menu-field="page">
+						<label>انتخاب برگه<select name="<?php echo esc_attr( $name . '[' . $index . '][page_id]' ); ?>">
+							<?php foreach ( self::page_options() as $page_id => $page_title ) : ?>
+								<option value="<?php echo esc_attr( $page_id ); ?>" <?php selected( (int) $row['page_id'], (int) $page_id ); ?>><?php echo esc_html( $page_title ); ?></option>
+							<?php endforeach; ?>
+						</select></label>
+					</div>
+					<div class="vtd-menu-type-field" data-menu-field="shortcode">
+						<label>شورت‌کد<input type="text" name="<?php echo esc_attr( $name . '[' . $index . '][shortcode]' ); ?>" value="<?php echo esc_attr( $row['shortcode'] ); ?>" placeholder="[my_shortcode]"></label>
+					</div>
+					<div class="vtd-menu-type-field" data-menu-field="content">
+						<label>محتوا (HTML امن، بلوک یا شورت‌کد)<textarea name="<?php echo esc_attr( $name . '[' . $index . '][content]' ); ?>" rows="3" placeholder="متن، بلوک یا [shortcode]"><?php echo esc_textarea( $row['content'] ); ?></textarea></label>
+					</div>
+				</div>
+			<?php else : ?>
+				<div class="vtd-menu-builder-details">
+					<label>پیوند دلخواه (اختیاری)<input type="url" name="<?php echo esc_attr( $name . '[' . $index . '][url]' ); ?>" value="<?php echo esc_attr( $row['url'] ); ?>" placeholder="برای پیوند داخلی، شناسه منو را وارد کنید"></label>
+				</div>
+			<?php endif; ?>
+		</div>
+		<?php
 	}
 
 	protected static function repeater_row( $name, $index, $row ) {
@@ -424,6 +533,45 @@ class VTD_Settings {
 			'date' => 'تاریخ شمسی', 'url' => 'پیوند', 'textarea' => 'متن چندخطی', 'select' => 'فهرست انتخاب',
 		);
 		return $labels[ $type ] ?? $type;
+	}
+
+	protected static function sanitize_menu_rows( $rows, $kind ) {
+		$clean = array();
+		$seen  = array();
+		foreach ( (array) $rows as $index => $row ) {
+			$row   = (array) $row;
+			$label = sanitize_text_field( $row['label'] ?? '' );
+			if ( '' === $label ) {
+				continue;
+			}
+			$slug = sanitize_key( $row['slug'] ?? '' );
+			if ( '' === $slug ) {
+				$slug = 'custom-' . ( count( $clean ) + 1 );
+			}
+			if ( isset( $seen[ $slug ] ) ) {
+				$slug .= '-' . ( count( $clean ) + 1 );
+			}
+			$seen[ $slug ] = true;
+			$item          = array(
+				'label'   => $label,
+				'slug'    => $slug,
+				'icon'    => sanitize_key( $row['icon'] ?? 'default' ),
+				'url'     => esc_url_raw( $row['url'] ?? '' ),
+				'enabled' => ! empty( $row['enabled'] ) ? 1 : 0,
+			);
+			if ( 'panel' === $kind ) {
+				$type = sanitize_key( $row['type'] ?? 'link' );
+				if ( ! in_array( $type, array( 'link', 'page', 'shortcode', 'content' ), true ) ) {
+					$type = 'link';
+				}
+				$item['type']      = $type;
+				$item['page_id']   = absint( $row['page_id'] ?? 0 );
+				$item['shortcode'] = sanitize_textarea_field( $row['shortcode'] ?? '' );
+				$item['content']   = wp_kses_post( $row['content'] ?? '' );
+			}
+			$clean[] = $item;
+		}
+		return $clean;
 	}
 
 	public static function sanitize( $input ) {
@@ -466,6 +614,7 @@ class VTD_Settings {
 				case 'register_page':
 				case 'reset_page':
 				case 'after_register_page':
+				case 'digits_login_page':
 					$clean[ $key ] = (int) $value;
 					break;
 				case 'radius':
@@ -488,9 +637,20 @@ class VTD_Settings {
 					break;
 				case 'email_header':
 				case 'email_footer':
+				case 'email_template_welcome':
+				case 'email_template_ticket_created':
+				case 'email_template_ticket_reply':
+				case 'email_template_card_status':
+				case 'email_template_withdrawal_status':
 				case 'terms_text':
 				case 'ticket_auto_reply':
 					$clean[ $key ] = wp_kses_post( $value );
+					break;
+				case 'otp_login_provider':
+					$clean[ $key ] = in_array( $value, array( 'native', 'digits' ), true ) ? $value : 'native';
+					break;
+				case 'digits_shortcode':
+					$clean[ $key ] = sanitize_key( $value );
 					break;
 				case 'ticket_staff_roles':
 					$clean[ $key ] = array_values( array_map( 'sanitize_key', (array) $value ) );
@@ -531,6 +691,12 @@ class VTD_Settings {
 							'url'   => esc_url_raw( $row['url'] ?? '' ),
 						);
 					}
+					break;
+				case 'dashboard_menu_custom':
+					$clean[ $key ] = self::sanitize_menu_rows( $value, 'panel' );
+					break;
+				case 'avatar_menu_items':
+					$clean[ $key ] = self::sanitize_menu_rows( $value, 'avatar' );
 					break;
 				default:
 					$clean[ $key ] = is_scalar( $value ) ? sanitize_text_field( $value ) : $value;

@@ -16,6 +16,7 @@ $vtd_current      = VTD_Router::current_section();
 $vtd_sections     = VTD_Router::menu_sections();
 $vtd_all_sections = VTD_Router::sections();
 $vtd_settings     = VTD_Options::all();
+$vtd_avatar_menu   = VTD_Dashboard::avatar_menu_items( $vtd_user_id );
 $vtd_logo         = $vtd_settings['panel_logo'] ?? '';
 $vtd_brand        = $vtd_settings['brand_name'] ?? 'Vetra';
 $vtd_unread       = VTD_Notifications::unread_count( $vtd_user_id );
@@ -58,9 +59,11 @@ $vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticke
 						continue;
 					}
 					$vtd_active = ( $vtd_current === $vtd_slug ) || ( 'dashboard' === $vtd_slug && 'dashboard' === $vtd_current );
+					$vtd_href   = ! empty( $vtd_section['url'] ) ? $vtd_section['url'] : vtd_panel_url( array( 'vtd' => $vtd_slug ) );
+					$vtd_target = ! empty( $vtd_section['external'] ) ? ' target="_blank" rel="noopener noreferrer"' : '';
 					?>
 					<li>
-						<a href="<?php echo esc_url( vtd_panel_url( array( 'vtd' => $vtd_slug ) ) ); ?>" class="<?php echo $vtd_active ? 'is-active' : ''; ?>">
+						<a href="<?php echo esc_url( $vtd_href ); ?>" class="<?php echo $vtd_active ? 'is-active' : ''; ?>"<?php echo $vtd_target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 							<?php echo vtd_icon( $vtd_section['icon'] ?? 'default' ); // phpcs:ignore ?>
 							<span><?php echo esc_html( $vtd_section['label'] ); ?></span>
 							<?php if ( 'notifications' === $vtd_slug && $vtd_unread ) : ?>
@@ -109,10 +112,27 @@ $vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticke
 						</div>
 					</div>
 				</div>
-				<a class="vtd-user-chip" href="<?php echo esc_url( vtd_panel_url( array( 'vtd' => 'profile' ) ) ); ?>">
-					<img src="<?php echo esc_url( VTD_Profile::avatar_url( $vtd_user_id ) ); ?>" alt="">
-					<span><?php echo esc_html( vtd_current_user_name( $vtd_user_id ) ); ?></span>
-				</a>
+				<details class="vtd-user-menu" data-vtd-user-menu>
+					<summary class="vtd-user-menu-trigger" aria-label="منوی حساب کاربری">
+						<img src="<?php echo esc_url( VTD_Profile::avatar_url( $vtd_user_id ) ); ?>" alt="">
+						<span><strong><?php echo esc_html( vtd_current_user_name( $vtd_user_id ) ); ?></strong><small>حساب کاربری</small></span>
+						<span class="vtd-user-menu-chevron" aria-hidden="true">⌄</span>
+					</summary>
+					<div class="vtd-user-menu-dropdown">
+						<div class="vtd-user-menu-heading">
+							<img src="<?php echo esc_url( VTD_Profile::avatar_url( $vtd_user_id ) ); ?>" alt="">
+							<div><strong><?php echo esc_html( vtd_current_user_name( $vtd_user_id ) ); ?></strong><small dir="ltr"><?php echo esc_html( wp_get_current_user()->user_email ); ?></small></div>
+						</div>
+						<nav aria-label="منوی حساب کاربری">
+							<?php foreach ( $vtd_avatar_menu as $vtd_user_menu_item ) : ?>
+								<a class="<?php echo esc_attr( $vtd_user_menu_item['class'] ); ?>" href="<?php echo esc_url( $vtd_user_menu_item['url'] ); ?>" target="<?php echo esc_attr( $vtd_user_menu_item['target'] ); ?>" <?php echo '_blank' === $vtd_user_menu_item['target'] ? 'rel="noopener noreferrer"' : ''; ?>>
+									<?php echo vtd_icon( $vtd_user_menu_item['icon'] ); // phpcs:ignore ?>
+									<span><?php echo esc_html( $vtd_user_menu_item['label'] ); ?></span>
+								</a>
+							<?php endforeach; ?>
+						</nav>
+					</div>
+				</details>
 			</div>
 		</header>
 

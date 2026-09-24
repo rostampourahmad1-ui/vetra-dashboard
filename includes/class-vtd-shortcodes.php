@@ -15,6 +15,8 @@ class VTD_Shortcodes {
 		add_shortcode( 'vetra_register', array( __CLASS__, 'register' ) );
 		add_shortcode( 'vetra_reset_password', array( __CLASS__, 'reset' ) );
 		add_shortcode( 'vetra_profile_links', array( __CLASS__, 'profile_links' ) );
+		add_shortcode( 'vetra_panel_section', array( __CLASS__, 'panel_section' ) );
+		add_shortcode( 'vetra_panel_menu', array( __CLASS__, 'panel_menu' ) );
 	}
 
 	protected static function needs_assets() {
@@ -54,5 +56,40 @@ class VTD_Shortcodes {
 		self::needs_assets();
 		VTD_Auth::$modal_requested = true;
 		return VTD_Templates::part( 'profile-links' );
+	}
+
+	public static function panel_section( $atts = array() ) {
+		self::needs_assets();
+		$atts = shortcode_atts( array( 'id' => '' ), $atts, 'vetra_panel_section' );
+		$slug = sanitize_key( $atts['id'] );
+		if ( '' === $slug ) {
+			return '';
+		}
+		return VTD_Auth::guard(
+			function () use ( $slug ) {
+				$settings = VTD_Options::all();
+				return '<div class="vtd-app vtd-embedded-section" data-theme="' . esc_attr( $settings['dark_mode'] ?? 'auto' ) . '"><div class="vtd-content">' . VTD_Router::render_section( $slug ) . '</div></div>';
+			}
+		);
+	}
+
+	public static function panel_menu( $atts = array() ) {
+		self::needs_assets();
+		return VTD_Auth::guard(
+			function () {
+				$user_id = get_current_user_id();
+				$html    = '<nav class="vtd-shortcode-menu" aria-label="بخش‌های پیشخوان"><ul>';
+				foreach ( VTD_Router::menu_sections() as $slug => $section ) {
+					if ( ! empty( $section['staff'] ) && ! vtd_is_staff( $user_id ) ) {
+						continue;
+					}
+					$url    = ! empty( $section['url'] ) ? $section['url'] : vtd_panel_url( array( 'vtd' => $slug ) );
+					$target = ! empty( $section['external'] ) ? ' target="_blank" rel="noopener noreferrer"' : '';
+					$html  .= '<li><a href="' . esc_url( $url ) . '"' . $target . '><span>' . esc_html( $section['label'] ) . '</span></a></li>';
+				}
+				$html .= '</ul></nav>';
+				return $html;
+			}
+		);
 	}
 }

@@ -9,6 +9,8 @@ defined( 'ABSPATH' ) || exit;
 
 class VTD_Router {
 
+	protected static $registered_sections = array();
+
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'add_rewrite' ) );
 		add_filter( 'query_vars', array( __CLASS__, 'query_vars' ) );
@@ -127,7 +129,98 @@ class VTD_Router {
 			}
 		}
 
+		foreach ( self::$registered_sections as $slug => $section ) {
+			if ( ! isset( $sections[ $slug ] ) ) {
+				$sections[ $slug ] = $section;
+			}
+		}
+
+		foreach ( (array) VTD_Options::get( 'dashboard_menu_custom', array() ) as $item ) {
+			if ( empty( $item['enabled'] ) || empty( $item['slug'] ) || empty( $item['label'] ) ) {
+				continue;
+			}
+			$slug = sanitize_key( $item['slug'] );
+			if ( isset( $sections[ $slug ] ) ) {
+				continue;
+			}
+			$entry = array(
+				'label'  => sanitize_text_field( $item['label'] ),
+				'icon'   => sanitize_key( $item['icon'] ?? 'default' ),
+				'custom' => true,
+			);
+			if ( 'link' === ( $item['type'] ?? 'link' ) ) {
+				if ( empty( $item['url'] ) ) {
+					continue;
+				}
+				$entry['url']      = esc_url( $item['url'] );
+				$host              = wp_parse_url( $item['url'], PHP_URL_HOST );
+				$home_host         = wp_parse_url( home_url(), PHP_URL_HOST );
+				$entry['external'] = $host && $home_host && strtolower( $host ) !== strtolower( $home_host );
+			} else {
+				$entry['callback'] = array( __CLASS__, 'render_custom_section' );
+			}
+			$sections[ $slug ] = $entry;
+		}
+
 		return apply_filters( 'vtd_panel_sections', $sections );
+	}
+
+	public static function register_section( $slug, $args ) {
+		$slug = sanitize_key( $slug );
+		$args = wp_parse_args( (array) $args, array( 'label' => '', 'icon' => 'default', 'callback' => null, 'staff' => false ) );
+		if ( '' === $slug || '' === trim( (string) $args['label'] ) || ! is_callable( $args['callback'] ) ) {
+			return false;
+		}
+		self::$registered_sections[ $slug ] = array(
+			'label'    => sanitize_text_field( $args['label'] ),
+			'icon'     => sanitize_key( $args['icon'] ),
+			'callback' => $args['callback'],
+			'staff'    => (bool) $args['staff'],
+		);
+		return true;
+	}
+
+	public static function render_custom_section( $slug = '' ) {
+		$slug  = $slug ? sanitize_key( $slug ) : self::current_section();
+		$items = (array) VTD_Options::get( 'dashboard_menu_custom', array() );
+		foreach ( $items as $item ) {
+			if ( empty( $item['enabled'] ) || sanitize_key( $item['slug'] ?? '' ) !== $slug ) {
+				continue;
+			}
+			$type    = $item['type'] ?? 'link';
+			$content = '';
+			if ( 'page' === $type ) {
+				$page = get_post( absint( $item['page_id'] ?? 0 ) );
+				if ( $page && 'publish' === $page->post_status ) {
+					$content = preg_replace( '/\[vetra_dashboard(?:\s[^\]]*)?\]/', '', $page->post_content );
+					$content = do_blocks( $content );
+					$content = do_shortcode( wpautop( $content ) );
+				}
+			} elseif ( 'shortcode' === $type ) {
+				$content = do_shortcode( (string) ( $item['shortcode'] ?? '' ) );
+			} elseif ( 'content' === $type ) {
+				$content = do_blocks( (string) ( $item['content'] ?? '' ) );
+				$content = do_shortcode( wpautop( $content ) );
+			}
+			$content = apply_filters( 'vtd_custom_panel_section_content', $content, $item, get_current_user_id() );
+			return '<div class="vtd-custom-panel-content">' . $content . '</div>';
+		}
+		return VTD_Templates::module( 'alert', array( 'message' => __( 'This dashboard page is unavailable.', 'vetra-dashboard' ), 'type' => 'error' ) );
+	}
+
+	public static function render_section( $slug ) {
+		$slug     = sanitize_key( $slug );
+		$sections = self::sections();
+		if ( empty( $sections[ $slug ] ) ) {
+			return '';
+		}
+		if ( ! empty( $sections[ $slug ]['staff'] ) && ! vtd_is_staff() ) {
+			return VTD_Templates::module( 'alert', array( 'message' => __( 'You do not have access to this section.', 'vetra-dashboard' ), 'type' => 'error' ) );
+		}
+		if ( ! empty( $sections[ $slug ]['custom'] ) ) {
+			return self::render_custom_section( $slug );
+		}
+		return is_callable( $sections[ $slug ]['callback'] ?? null ) ? call_user_func( $sections[ $slug ]['callback'] ) : '';
 	}
 
 	public static function menu_sections() {

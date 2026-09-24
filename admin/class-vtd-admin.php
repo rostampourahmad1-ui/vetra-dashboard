@@ -12,6 +12,7 @@ class VTD_Admin {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_post_vtd_sms_test', array( __CLASS__, 'sms_test' ) );
+		add_action( 'admin_post_vtd_email_preview', array( __CLASS__, 'email_preview' ) );
 		add_action( 'admin_post_vtd_action', array( __CLASS__, 'handle_action' ) );
 		add_filter( 'plugin_action_links_' . VTD_BASENAME, array( __CLASS__, 'plugin_links' ) );
 		VTD_Settings::init();
@@ -50,7 +51,8 @@ class VTD_Admin {
 		);
 
 		foreach ( $pages as $slug => $data ) {
-			add_submenu_page( 'vetra-dashboard', $data[0], $data[0], 'manage_options', $slug, $data[1] );
+			$callback = is_string( $data[1] ) ? array( __CLASS__, $data[1] ) : $data[1];
+			add_submenu_page( 'vetra-dashboard', $data[0], $data[0], 'manage_options', $slug, $callback );
 		}
 	}
 
@@ -140,6 +142,21 @@ class VTD_Admin {
 		$result = VTD_SMS::test( $phone );
 		$state  = is_wp_error( $result ) ? 'error' : 'success';
 		wp_safe_redirect( add_query_arg( array( 'page' => 'vetra-settings', 'tab' => 'sms', 'vtd_msg' => $state ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	public static function email_preview() {
+		$template = isset( $_GET['template'] ) ? sanitize_key( wp_unslash( $_GET['template'] ) ) : '';
+		if ( ! current_user_can( 'manage_options' ) || ! check_admin_referer( 'vtd_email_preview_' . $template ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'vetra-dashboard' ) );
+		}
+		$preview = VTD_Email::preview( $template );
+		if ( '' === $preview ) {
+			wp_die( esc_html__( 'Email template not found.', 'vetra-dashboard' ) );
+		}
+		nocache_headers();
+		header( 'Content-Type: text/html; charset=UTF-8' );
+		echo $preview; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		exit;
 	}
 

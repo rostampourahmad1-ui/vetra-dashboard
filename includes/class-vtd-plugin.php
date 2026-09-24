@@ -19,6 +19,7 @@ final class VTD_Plugin {
 	}
 
 	protected function __construct() {
+		VTD_I18n::init();
 		VTD_Install::maybe_upgrade();
 
 		VTD_Roles::init();

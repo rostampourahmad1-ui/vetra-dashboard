@@ -106,6 +106,41 @@ class VTD_Email {
 		return ob_get_clean();
 	}
 
+	public static function render_template( $key, $tokens, $fallback = '' ) {
+		$template = (string) VTD_Options::get( $key, '' );
+		$template = '' !== trim( $template ) ? $template : $fallback;
+		$replace  = array();
+		foreach ( (array) $tokens as $name => $value ) {
+			$replace[ '{{' . $name . '}}' ] = 'action_url' === $name ? esc_url( $value ) : esc_html( $value );
+		}
+		return wp_kses_post( strtr( $template, $replace ) );
+	}
+
+	public static function preview( $key ) {
+		$user_name = 'کاربر نمونه';
+		$site_name = get_bloginfo( 'name' );
+		$tokens    = array(
+			'user_name'    => $user_name,
+			'site_name'    => $site_name,
+			'ticket_id'    => '۱۲۳۴',
+			'ticket_title' => 'نمونه عنوان تیکت',
+			'action_url'   => VTD_Router::panel_url(),
+			'status'       => 'تأیید شده',
+			'amount'        => VTD_Wallet::format( 250000 ),
+		);
+		$templates = array(
+			'email_template_welcome' => array( 'title' => 'خوش‌آمدگویی', 'fallback' => '<p>سلام {{user_name}} عزیز،</p><p>به {{site_name}} خوش آمدید.</p><p><a href="{{action_url}}">ورود به پیشخوان</a></p>' ),
+			'email_template_ticket_created' => array( 'title' => 'ثبت تیکت', 'fallback' => '<p>تیکت {{ticket_id}} ثبت شد.</p><p>{{ticket_title}}</p><p><a href="{{action_url}}">مشاهده تیکت</a></p>' ),
+			'email_template_ticket_reply' => array( 'title' => 'پاسخ تیکت', 'fallback' => '<p>برای تیکت {{ticket_id}} پاسخ تازه ثبت شده است.</p><p>{{ticket_title}}</p><p><a href="{{action_url}}">مشاهده گفتگو</a></p>' ),
+			'email_template_card_status' => array( 'title' => 'وضعیت کارت بانکی', 'fallback' => '<p>وضعیت کارت بانکی شما: {{status}}</p>' ),
+			'email_template_withdrawal_status' => array( 'title' => 'وضعیت برداشت', 'fallback' => '<p>وضعیت درخواست برداشت: {{status}}</p><p>مبلغ: {{amount}}</p>' ),
+		);
+		if ( ! isset( $templates[ $key ] ) ) {
+			return '';
+		}
+		return self::wrap( $templates[ $key ]['title'], self::render_template( $key, $tokens, $templates[ $key ]['fallback'] ) );
+	}
+
 	public static function button( $url, $label ) {
 		return '<p style="text-align:center;margin:24px 0;"><a href="' . esc_url( $url ) . '" style="display:inline-block;padding:12px 26px;border-radius:12px;background:#6d28d9;color:#ffffff;text-decoration:none;font-weight:700;">' . esc_html( $label ) . '</a></p>';
 	}
@@ -115,12 +150,11 @@ class VTD_Email {
 		if ( ! $user || ! is_email( $user->user_email ) ) {
 			return;
 		}
-		$body = sprintf(
-			/* translators: %s: user name */
-			__( 'Hi %s, welcome to our community. Your account has been created successfully.', 'vetra-dashboard' ),
-			esc_html( vtd_current_user_name( $user_id ) )
+		$body = self::render_template(
+			'email_template_welcome',
+			array( 'user_name' => vtd_current_user_name( $user_id ), 'site_name' => get_bloginfo( 'name' ), 'action_url' => VTD_Router::panel_url() ),
+			'<p>سلام {{user_name}} عزیز، به {{site_name}} خوش آمدید.</p><p><a href="{{action_url}}">ورود به پیشخوان</a></p>'
 		);
-		$body .= self::button( VTD_Router::panel_url(), __( 'Go to dashboard', 'vetra-dashboard' ) );
 
 		self::send( $user->user_email, __( 'Welcome', 'vetra-dashboard' ), __( 'Your account is ready', 'vetra-dashboard' ), $body, array( 'context' => 'signup' ) );
 	}
@@ -145,9 +179,17 @@ class VTD_Email {
 			$emails[] = get_option( 'admin_email' );
 		}
 
-		$body  = '<p>' . esc_html( sprintf( __( 'A new ticket was registered by %s.', 'vetra-dashboard' ), vtd_current_user_name( $user_id ) ) ) . '</p>';
-		$body .= '<p><strong>' . esc_html( $ticket->ticket_title ) . '</strong></p>';
-		$body .= self::button( vtd_panel_url( array( 'vtd' => 'ticket', 'ticket' => $ticket_id ) ), __( 'View ticket', 'vetra-dashboard' ) );
+		$body = self::render_template(
+			'email_template_ticket_created',
+			array(
+				'user_name'    => vtd_current_user_name( $user_id ),
+				'site_name'    => get_bloginfo( 'name' ),
+				'ticket_id'    => $ticket_id,
+				'ticket_title' => $ticket->ticket_title,
+				'action_url'   => vtd_panel_url( array( 'vtd' => 'ticket', 'ticket' => $ticket_id ) ),
+			),
+			'<p>درخواست پشتیبانی شما با شماره {{ticket_id}} ثبت شد.</p><p><strong>{{ticket_title}}</strong></p><p><a href="{{action_url}}">مشاهده تیکت</a></p>'
+		);
 
 		self::send( $emails, sprintf( __( 'New ticket #%d', 'vetra-dashboard' ), $ticket_id ), __( 'New support ticket', 'vetra-dashboard' ), $body, array( 'context' => 'ticket' ) );
 	}
@@ -182,9 +224,17 @@ class VTD_Email {
 			$heading = __( 'New reply from user', 'vetra-dashboard' );
 		}
 
-		$body  = '<p>' . esc_html( sprintf( __( 'Ticket #%d received a new reply.', 'vetra-dashboard' ), $ticket_id ) ) . '</p>';
-		$body .= '<p><strong>' . esc_html( $ticket->ticket_title ) . '</strong></p>';
-		$body .= self::button( vtd_panel_url( array( 'vtd' => 'ticket', 'ticket' => $ticket_id ) ), __( 'View conversation', 'vetra-dashboard' ) );
+		$body = self::render_template(
+			'email_template_ticket_reply',
+			array(
+				'user_name'    => vtd_current_user_name( $owner_id ),
+				'site_name'    => get_bloginfo( 'name' ),
+				'ticket_id'    => $ticket_id,
+				'ticket_title' => $ticket->ticket_title,
+				'action_url'   => vtd_panel_url( array( 'vtd' => 'ticket', 'ticket' => $ticket_id ) ),
+			),
+			'<p>برای تیکت {{ticket_id}} پاسخ تازه ثبت شده است.</p><p><strong>{{ticket_title}}</strong></p><p><a href="{{action_url}}">مشاهده گفتگو</a></p>'
+		);
 
 		self::send( $recipients, $heading, $heading, $body, array( 'context' => 'ticket' ) );
 	}
@@ -203,7 +253,7 @@ class VTD_Email {
 			'rejected' => __( 'Your bank card was rejected.', 'vetra-dashboard' ),
 			'pending'  => __( 'Your bank card is under review.', 'vetra-dashboard' ),
 		);
-		$body = '<p>' . esc_html( $labels[ $status ] ?? __( 'Your bank card status changed.', 'vetra-dashboard' ) ) . '</p>';
+		$body = self::render_template( 'email_template_card_status', array( 'status' => $labels[ $status ] ?? 'به‌روزرسانی شد' ), '<p>وضعیت کارت بانکی شما: {{status}}</p>' );
 		self::send( $user->user_email, __( 'Bank card status', 'vetra-dashboard' ), __( 'Bank card status', 'vetra-dashboard' ), $body );
 	}
 
@@ -217,8 +267,7 @@ class VTD_Email {
 			'rejected' => __( 'Your withdrawal request was rejected.', 'vetra-dashboard' ),
 			'paid'     => __( 'Your withdrawal request has been paid.', 'vetra-dashboard' ),
 		);
-		$body = '<p>' . esc_html( $labels[ $status ] ?? __( 'Your withdrawal status changed.', 'vetra-dashboard' ) ) . '</p>';
-		$body .= '<p>' . esc_html( VTD_Wallet::format( $row->amount ) ) . '</p>';
+		$body = self::render_template( 'email_template_withdrawal_status', array( 'status' => $labels[ $status ] ?? 'به‌روزرسانی شد', 'amount' => VTD_Wallet::format( $row->amount ) ), '<p>وضعیت درخواست برداشت: {{status}}</p><p>مبلغ: {{amount}}</p>' );
 		self::send( $user->user_email, __( 'Withdrawal status', 'vetra-dashboard' ), __( 'Withdrawal status', 'vetra-dashboard' ), $body );
 	}
 }

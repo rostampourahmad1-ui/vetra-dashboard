@@ -69,6 +69,34 @@ class VTD_Dashboard {
 		return $default;
 	}
 
+	public static function avatar_menu_items( $user_id = 0 ) {
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
+		$items   = array();
+		foreach ( (array) VTD_Options::get( 'avatar_menu_items', array() ) as $item ) {
+			$item = wp_parse_args( (array) $item, array( 'label' => '', 'slug' => '', 'url' => '', 'icon' => 'default', 'enabled' => 1 ) );
+			if ( empty( $item['enabled'] ) || '' === trim( $item['label'] ) ) {
+				continue;
+			}
+			if ( 'logout' === $item['slug'] ) {
+				$url = VTD_Auth::logout_url();
+			} elseif ( ! empty( $item['url'] ) ) {
+				$url = esc_url( $item['url'] );
+			} elseif ( isset( VTD_Router::sections()[ $item['slug'] ] ) ) {
+				$url = vtd_panel_url( array( 'vtd' => $item['slug'] ) );
+			} else {
+				continue;
+			}
+			$items[] = array(
+				'label'  => sanitize_text_field( $item['label'] ),
+				'icon'   => sanitize_key( $item['icon'] ),
+				'url'    => $url,
+				'target' => ! empty( $item['url'] ) && wp_parse_url( $item['url'], PHP_URL_HOST ) && wp_parse_url( $item['url'], PHP_URL_HOST ) !== wp_parse_url( home_url(), PHP_URL_HOST ) ? '_blank' : '_self',
+				'class'  => 'logout' === $item['slug'] ? 'is-logout' : '',
+			);
+		}
+		return apply_filters( 'vtd_avatar_menu_items', $items, $user_id );
+	}
+
 	public static function render() {
 		$user_id = get_current_user_id();
 		return VTD_Templates::module(

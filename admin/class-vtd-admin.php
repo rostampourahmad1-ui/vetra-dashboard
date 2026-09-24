@@ -27,7 +27,7 @@ class VTD_Admin {
 		add_menu_page(
 			__( 'Vetra Dashboard', 'vetra-dashboard' ),
 			__( 'Vetra', 'vetra-dashboard' ),
-			'vtd_access_panel',
+			'manage_options',
 			'vetra-dashboard',
 			array( __CLASS__, 'page_dashboard' ),
 			'dashicons-layout',
@@ -50,12 +50,12 @@ class VTD_Admin {
 		);
 
 		foreach ( $pages as $slug => $data ) {
-			add_submenu_page( 'vetra-dashboard', $data[0], $data[0], 'vtd_access_panel', $slug, $data[1] );
+			add_submenu_page( 'vetra-dashboard', $data[0], $data[0], 'manage_options', $slug, $data[1] );
 		}
 	}
 
 	protected static function guard() {
-		if ( ! current_user_can( 'vtd_access_panel' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You do not have permission to access this page.', 'vetra-dashboard' ) );
 		}
 	}
@@ -144,7 +144,7 @@ class VTD_Admin {
 	}
 
 	public static function handle_action() {
-		if ( ! current_user_can( 'vtd_access_panel' ) || ! isset( $_GET['_vtdnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_vtdnonce'] ) ), 'vtd_action' ) ) {
+		if ( ! current_user_can( 'manage_options' ) || ! isset( $_GET['_vtdnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_vtdnonce'] ) ), 'vtd_action' ) ) {
 			wp_die( esc_html__( 'Permission denied.', 'vetra-dashboard' ) );
 		}
 

@@ -14,7 +14,7 @@ class VTD_Profile {
 	public static function fields() {
 		$fields = array();
 		foreach ( (array) VTD_Options::get( 'profile_custom_fields', array() ) as $field ) {
-			if ( empty( $field['slug'] ) ) {
+			if ( empty( $field['slug'] ) || 'birthday' === $field['slug'] ) {
 				continue;
 			}
 			$fields[ $field['slug'] ] = array(
@@ -89,7 +89,12 @@ class VTD_Profile {
 			update_user_meta( $user_id, 'vtd_gender', sanitize_text_field( $data['gender'] ) );
 		}
 		if ( isset( $data['birthday'] ) ) {
-			update_user_meta( $user_id, 'vtd_birthday', sanitize_text_field( $data['birthday'] ) );
+			$birthday = vtd_jalali_to_gregorian( sanitize_text_field( $data['birthday'] ) );
+			if ( '' !== $birthday || '' === trim( (string) $data['birthday'] ) ) {
+				update_user_meta( $user_id, 'vtd_birthday', $birthday );
+			} else {
+				$errors[] = __( 'لطفاً تاریخ تولد شمسی معتبر وارد کنید.', 'vetra-dashboard' );
+			}
 		}
 		if ( isset( $data['country'] ) ) {
 			update_user_meta( $user_id, 'vtd_country', sanitize_text_field( $data['country'] ) );
@@ -109,6 +114,12 @@ class VTD_Profile {
 			}
 			if ( 'url' === $field['type'] ) {
 				$value = esc_url_raw( $value );
+			} elseif ( 'date' === $field['type'] ) {
+				$value = vtd_jalali_to_gregorian( sanitize_text_field( $value ) );
+				if ( '' === $value && '' !== trim( (string) $data[ $slug ] ) ) {
+					$errors[] = sprintf( __( 'لطفاً تاریخ شمسی معتبر برای «%s» وارد کنید.', 'vetra-dashboard' ), $field['label'] );
+					continue;
+				}
 			} else {
 				$value = sanitize_text_field( $value );
 			}

@@ -23,7 +23,7 @@ class VTD_Shortcodes {
 
 	public static function dashboard( $atts = array() ) {
 		self::needs_assets();
-		return VTD_Auth::guard( VTD_Templates::panel() );
+		return VTD_Auth::guard( array( 'VTD_Templates', 'panel' ) );
 	}
 
 	public static function login( $atts = array() ) {
@@ -52,6 +52,7 @@ class VTD_Shortcodes {
 
 	public static function profile_links( $atts = array() ) {
 		self::needs_assets();
+		VTD_Auth::$modal_requested = true;
 		return VTD_Templates::part( 'profile-links' );
 	}
 }

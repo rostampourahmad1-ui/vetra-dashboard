@@ -50,7 +50,27 @@
 				data[key] = value;
 			}
 		});
+		form.querySelectorAll("[data-vtd-jalali-date]").forEach(function (field) {
+			var iso = window.VTDJalali ? window.VTDJalali.parse(field.value) : null;
+			if ("" === field.value.trim()) {
+				data[field.name] = "";
+			} else if (iso) {
+				data[field.name] = iso;
+			}
+		});
 		return data;
+	}
+
+	function jalaliDatesValid(form) {
+		var valid = true;
+		form.querySelectorAll("[data-vtd-jalali-date]").forEach(function (field) {
+			var empty = "" === field.value.trim();
+			var parsed = window.VTDJalali ? window.VTDJalali.parse(field.value) : null;
+			var fieldValid = empty ? !field.required : !!parsed;
+			field.setAttribute("aria-invalid", fieldValid ? "false" : "true");
+			valid = valid && fieldValid;
+		});
+		return valid;
 	}
 
 	function initTheme() {
@@ -172,6 +192,10 @@
 			var msg = form.querySelector("[data-vtd-form-msg]");
 			form.addEventListener("submit", function (event) {
 				event.preventDefault();
+				if (!jalaliDatesValid(form)) {
+					setMessage(msg, "تاریخ را به‌صورت شمسی و با قالب سال/ماه/روز وارد کنید.", false);
+					return;
+				}
 				setMessage(msg, i18n.loading || "...", true);
 				request("profile", { data: formData(form) }).then(function (response) {
 					setMessage(msg, response.message || i18n.saved, !!response.success);

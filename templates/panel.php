@@ -8,6 +8,9 @@
 defined( 'ABSPATH' ) || exit;
 
 $vtd_is_logged_in = is_user_logged_in();
+if ( ! $vtd_is_logged_in ) {
+	return;
+}
 $vtd_user_id      = get_current_user_id();
 $vtd_current      = VTD_Router::current_section();
 $vtd_sections     = VTD_Router::menu_sections();
@@ -28,7 +31,7 @@ $vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticke
 				<?php if ( $vtd_logo ) : ?>
 					<img src="<?php echo esc_url( $vtd_logo ); ?>" alt="<?php echo esc_attr( $vtd_brand ); ?>">
 				<?php else : ?>
-					<span class="vtd-brand-mark"><?php echo esc_html( mb_substr( $vtd_brand, 0, 1 ) ); ?></span>
+					<span class="vtd-brand-mark"><?php echo esc_html( vtd_first_char( $vtd_brand ) ); ?></span>
 				<?php endif; ?>
 				<span class="vtd-brand-text">
 					<strong><?php echo esc_html( $vtd_brand ); ?></strong>

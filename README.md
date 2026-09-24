@@ -19,12 +19,15 @@ Vetra Dashboard replaces the default WordPress profile experience with a polishe
 - **SMS** integration for IPPanel (Edge API + Legacy API) and a generic webhook provider
 - **Templated transactional emails**
 - **Modern UI**: RTL-first, automatic dark mode, responsive, full-width panel template
+- **Persian admin experience**: redesigned right-to-left settings screens, Persian dashboard navigation and Jalali date entry/display
 - **GPL-2.0-or-later** licensed, no encrypted or obfuscated code
 
 ## Requirements
 
 - WordPress 6.2+
 - PHP 7.4+
+
+Persian date fields are entered and displayed in the Jalali calendar; dates are stored as Gregorian ISO values for WordPress compatibility.
 
 ## Installation
 

@@ -58,10 +58,10 @@ $vtd_data     = VTD_Auth::$form_data;
 		<?php endif; ?>
 
 		<?php if ( ! empty( $vtd_settings['register_birthday'] ) ) : ?>
-			<label class="vtd-field">
-				<span><?php esc_html_e( 'Birthday', 'vetra-dashboard' ); ?></span>
-				<input type="date" name="birthday" value="<?php echo esc_attr( $vtd_data['birthday'] ?? '' ); ?>">
-			</label>
+			<div class="vtd-field">
+				<label for="vtd-register-birthday"><span>تاریخ تولد</span></label>
+				<?php echo vtd_jalali_date_input( 'birthday', $vtd_data['birthday'] ?? '', false, 'vtd-register-birthday' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			</div>
 		<?php endif; ?>
 
 		<label class="vtd-field">

@@ -43,10 +43,10 @@ class VTD_Dashboard {
 
 	public static function shortcuts() {
 		$default = array(
-			array( 'label' => __( 'New Ticket', 'vetra-dashboard' ), 'icon' => 'plus', 'url' => vtd_panel_url( array( 'vtd' => 'new-ticket' ) ) ),
-			array( 'label' => __( 'Profile', 'vetra-dashboard' ), 'icon' => 'profile', 'url' => vtd_panel_url( array( 'vtd' => 'profile' ) ) ),
-			array( 'label' => __( 'Wallet', 'vetra-dashboard' ), 'icon' => 'wallet', 'url' => vtd_panel_url( array( 'vtd' => 'wallet' ) ) ),
-			array( 'label' => __( 'Attachments', 'vetra-dashboard' ), 'icon' => 'download', 'url' => vtd_panel_url( array( 'vtd' => 'attachments' ) ) ),
+			array( 'label' => 'ثبت تیکت جدید', 'icon' => 'plus', 'url' => vtd_panel_url( array( 'vtd' => 'new-ticket' ) ) ),
+			array( 'label' => 'ویرایش پروفایل', 'icon' => 'profile', 'url' => vtd_panel_url( array( 'vtd' => 'profile' ) ) ),
+			array( 'label' => 'کیف پول', 'icon' => 'wallet', 'url' => vtd_panel_url( array( 'vtd' => 'wallet' ) ) ),
+			array( 'label' => 'دریافت فایل‌ها', 'icon' => 'download', 'url' => vtd_panel_url( array( 'vtd' => 'attachments' ) ) ),
 		);
 
 		$configured = (array) VTD_Options::get( 'dashboard_shortcuts', array() );

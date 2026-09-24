@@ -9,6 +9,16 @@ defined( 'ABSPATH' ) || exit;
 
 class VTD_List_Tables {
 
+	protected static function value_label( $value ) {
+		$labels = array(
+			'pending' => 'در انتظار بررسی', 'approved' => 'تأییدشده', 'rejected' => 'ردشده', 'paid' => 'پرداخت‌شده',
+			'success' => 'موفق', 'error' => 'خطا', 'failed' => 'ناموفق', 'all' => 'همه کاربران', 'user' => 'کاربر مشخص',
+			'role' => 'نقش کاربری', 'login' => 'ورود', 'register' => 'ثبت‌نام', 'verify_phone' => 'تأیید موبایل',
+			'password_reset' => 'بازیابی گذرواژه', 'signup' => 'ثبت‌نام',
+		);
+		return $labels[ (string) $value ] ?? $value;
+	}
+
 	protected static function action_url( $args ) {
 		$args['action'] = 'vtd_action';
 		return wp_nonce_url( add_query_arg( $args, admin_url( 'admin-post.php' ) ), 'vtd_action', '_vtdnonce' );
@@ -145,7 +155,7 @@ class VTD_List_Tables {
 		echo '<button class="button button-primary">' . esc_html__( 'Send', 'vetra-dashboard' ) . '</button></form>';
 		echo '<table class="widefat striped"><thead><tr><th>#</th><th>' . esc_html__( 'Title', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Audience', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Date', 'vetra-dashboard' ) . '</th><th></th></tr></thead><tbody>';
 		foreach ( $items as $item ) {
-			echo '<tr><td>' . (int) $item->notification_id . '</td><td>' . esc_html( $item->title ) . '</td><td>' . esc_html( $item->audience . ' ' . $item->audience_value ) . '</td><td>' . esc_html( vtd_date_i18n( $item->created_at ) ) . '</td>';
+			echo '<tr><td>' . (int) $item->notification_id . '</td><td>' . esc_html( $item->title ) . '</td><td>' . esc_html( self::value_label( $item->audience ) . ' ' . $item->audience_value ) . '</td><td>' . esc_html( vtd_date_i18n( $item->created_at ) ) . '</td>';
 			echo '<td><a class="button button-small" href="' . esc_url( self::action_url( array( 'do' => 'delete_notification', 'id' => $item->notification_id ) ) ) . '">' . esc_html__( 'Delete', 'vetra-dashboard' ) . '</a></td></tr>';
 		}
 		echo '</tbody></table>';
@@ -243,7 +253,7 @@ class VTD_List_Tables {
 		self::msg();
 		echo '<table class="widefat striped"><thead><tr><th>#</th><th>' . esc_html__( 'User', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Bank', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Owner', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Card', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Status', 'vetra-dashboard' ) . '</th><th></th></tr></thead><tbody>';
 		foreach ( $items as $card ) {
-			echo '<tr><td>' . (int) $card->card_id . '</td><td>' . esc_html( vtd_current_user_name( $card->user_id ) ) . '</td><td>' . esc_html( VTD_Banking::bank_label( $card->card_name ) ) . '</td><td>' . esc_html( $card->card_owner ) . '</td><td>' . esc_html( $card->card_number ) . '</td><td>' . esc_html( $card->card_status ) . '</td><td>';
+			echo '<tr><td>' . (int) $card->card_id . '</td><td>' . esc_html( vtd_current_user_name( $card->user_id ) ) . '</td><td>' . esc_html( VTD_Banking::bank_label( $card->card_name ) ) . '</td><td>' . esc_html( $card->card_owner ) . '</td><td>' . esc_html( $card->card_number ) . '</td><td>' . esc_html( self::value_label( $card->card_status ) ) . '</td><td>';
 			echo '<a class="button button-small" href="' . esc_url( self::action_url( array( 'do' => 'card_status', 'id' => $card->card_id, 'status' => 'approved' ) ) ) . '">' . esc_html__( 'Approve', 'vetra-dashboard' ) . '</a> ';
 			echo '<a class="button button-small" href="' . esc_url( self::action_url( array( 'do' => 'card_status', 'id' => $card->card_id, 'status' => 'rejected' ) ) ) . '">' . esc_html__( 'Reject', 'vetra-dashboard' ) . '</a>';
 			echo '</td></tr>';
@@ -260,7 +270,7 @@ class VTD_List_Tables {
 		self::msg();
 		echo '<table class="widefat striped"><thead><tr><th>#</th><th>' . esc_html__( 'User', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Amount', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Status', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Date', 'vetra-dashboard' ) . '</th><th></th></tr></thead><tbody>';
 		foreach ( $items as $item ) {
-			echo '<tr><td>' . (int) $item->id . '</td><td>' . esc_html( vtd_current_user_name( $item->user_id ) ) . '</td><td>' . esc_html( VTD_Wallet::format( $item->amount ) ) . '</td><td>' . esc_html( $item->status ) . '</td><td>' . esc_html( vtd_date_i18n( $item->created_at ) ) . '</td><td>';
+			echo '<tr><td>' . (int) $item->id . '</td><td>' . esc_html( vtd_current_user_name( $item->user_id ) ) . '</td><td>' . esc_html( VTD_Wallet::format( $item->amount ) ) . '</td><td>' . esc_html( self::value_label( $item->status ) ) . '</td><td>' . esc_html( vtd_date_i18n( $item->created_at ) ) . '</td><td>';
 			if ( 'pending' === $item->status ) {
 				echo '<a class="button button-small" href="' . esc_url( self::action_url( array( 'do' => 'withdrawal', 'id' => $item->id, 'status' => 'paid' ) ) ) . '">' . esc_html__( 'Mark paid', 'vetra-dashboard' ) . '</a> ';
 				echo '<a class="button button-small" href="' . esc_url( self::action_url( array( 'do' => 'withdrawal', 'id' => $item->id, 'status' => 'rejected' ) ) ) . '">' . esc_html__( 'Reject', 'vetra-dashboard' ) . '</a>';
@@ -310,7 +320,7 @@ class VTD_List_Tables {
 		echo '<div class="wrap vtd-admin-wrap"><h1>' . esc_html__( 'SMS Log', 'vetra-dashboard' ) . '</h1>';
 		echo '<table class="widefat striped"><thead><tr><th>#</th><th>' . esc_html__( 'Phone', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Message', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Context', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Status', 'vetra-dashboard' ) . '</th><th>' . esc_html__( 'Date', 'vetra-dashboard' ) . '</th></tr></thead><tbody>';
 		foreach ( $items as $item ) {
-			echo '<tr><td>' . (int) $item->id . '</td><td dir="ltr">' . esc_html( $item->phone ) . '</td><td>' . esc_html( mb_substr( (string) $item->message, 0, 60 ) ) . '</td><td>' . esc_html( $item->context ) . '</td><td>' . esc_html( $item->status ) . '</td><td>' . esc_html( vtd_date_i18n( $item->created_at ) ) . '</td></tr>';
+			echo '<tr><td>' . (int) $item->id . '</td><td dir="ltr">' . esc_html( $item->phone ) . '</td><td>' . esc_html( vtd_excerpt( $item->message, 60 ) ) . '</td><td>' . esc_html( self::value_label( $item->context ) ) . '</td><td>' . esc_html( self::value_label( $item->status ) ) . '</td><td>' . esc_html( vtd_date_i18n( $item->created_at ) ) . '</td></tr>';
 		}
 		echo '</tbody></table>';
 		self::pagination( $total, $per, $paged );

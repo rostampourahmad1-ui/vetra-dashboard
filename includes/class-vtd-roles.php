@@ -10,8 +10,17 @@ defined( 'ABSPATH' ) || exit;
 class VTD_Roles {
 
 	public static function init() {
-		add_action( 'init', array( __CLASS__, 'sync_staff_caps' ), 20 );
 		add_filter( 'map_meta_cap', array( __CLASS__, 'map_meta_cap' ), 10, 4 );
+	}
+
+	public static function maybe_sync() {
+		$staff_roles = (array) VTD_Options::get( 'ticket_staff_roles', array( 'administrator', 'editor' ) );
+		$hash        = md5( wp_json_encode( $staff_roles ) );
+		if ( get_option( 'vtd_caps_hash' ) === $hash ) {
+			return;
+		}
+		self::sync_staff_caps();
+		update_option( 'vtd_caps_hash', $hash );
 	}
 
 	public static function caps() {
@@ -31,6 +40,8 @@ class VTD_Roles {
 			}
 		}
 		self::sync_staff_caps();
+		$staff_roles = (array) VTD_Options::get( 'ticket_staff_roles', array( 'administrator', 'editor' ) );
+		update_option( 'vtd_caps_hash', md5( wp_json_encode( $staff_roles ) ) );
 	}
 
 	public static function sync_staff_caps() {

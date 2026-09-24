@@ -4,7 +4,7 @@ Tags: user dashboard, panel, tickets, sms, otp, profile, wallet, notifications
 Requires at least: 6.2
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 
 A modern, independent user dashboard and account panel for WordPress. No WooCommerce required.
@@ -25,6 +25,7 @@ Vetra Dashboard replaces the default WordPress profile experience with a complet
 * Login, registration and password reset with email and SMS OTP
 * IPPanel SMS integration (Edge API and Legacy API) plus a generic webhook provider
 * Modern RTL-first UI with automatic dark mode
+* Persian RTL administration screens and Jalali date entry/display
 
 == Installation ==
 
@@ -44,3 +45,7 @@ Vetra Dashboard replaces the default WordPress profile experience with a complet
 
 = 1.0.0 =
 * Initial release.
+
+= 1.1.0 =
+* Redesigned Persian RTL administration settings and management screens.
+* Added Jalali calendar date entry and Jalali date formatting for plugin dates.

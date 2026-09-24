@@ -33,6 +33,7 @@ class VTD_Install {
 			self::create_tables();
 			update_option( 'vtd_db_version', VTD_DB_VERSION );
 		}
+		VTD_Roles::maybe_sync();
 	}
 
 	public static function create_tables() {

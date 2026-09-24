@@ -11,6 +11,82 @@ class VTD_Settings {
 
 	public static function init() {
 		add_action( 'admin_init', array( __CLASS__, 'register' ) );
+		add_filter( 'gettext', array( __CLASS__, 'translate_admin' ), 20, 3 );
+	}
+
+	public static function translate_admin( $translation, $text, $domain ) {
+		if ( 'vetra-dashboard' !== $domain || ! is_admin() ) {
+			return $translation;
+		}
+		$translations = array(
+			'General' => 'عمومی', 'Design' => 'ظاهر و طراحی', 'Login & Register' => 'ورود و ثبت‌نام',
+			'Profile fields' => 'فیلدهای پروفایل', 'Tickets' => 'تیکت‌ها', 'Modules' => 'ماژول‌ها', 'SMS' => 'پیامک',
+			'Email' => 'ایمیل', 'Advanced' => 'پیشرفته', 'Dashboard' => 'پیشخوان', 'Profile' => 'پروفایل',
+			'Support Requests' => 'درخواست‌های پشتیبانی', 'Notifications' => 'اعلان‌ها', 'Polls' => 'نظرسنجی‌ها',
+			'Attachments' => 'پیوست‌ها', 'Wallet' => 'کیف پول', 'Bank Information' => 'اطلاعات بانکی', 'Comments' => 'دیدگاه‌ها',
+			'Panel page' => 'برگه پیشخوان', 'Login page' => 'برگه ورود', 'Register page' => 'برگه ثبت‌نام',
+			'Reset password page' => 'برگه بازیابی گذرواژه', 'Brand name' => 'نام برند', 'Brand tagline' => 'شعار برند',
+			'Panel logo' => 'لوگوی پیشخوان', 'Menu items' => 'آیتم‌های منوی پیشخوان', 'Redirect after login' => 'مقصد پس از ورود',
+			'Panel' => 'پیشخوان', 'WP admin' => 'مدیریت وردپرس', 'Redirect after registration (page)' => 'مقصد پس از ثبت‌نام',
+			'Dashboard shortcuts' => 'میانبرهای پیشخوان', 'Primary color' => 'رنگ اصلی', 'Accent color' => 'رنگ تأکیدی',
+			'Border radius (px)' => 'گردی گوشه‌ها (پیکسل)', 'Dark mode' => 'حالت تیره', 'Automatic' => 'خودکار',
+			'Light' => 'روشن', 'Dark' => 'تیره', 'Full-width panel (no theme header/footer)' => 'پیشخوان تمام‌عرض (بدون سربرگ و پابرگ پوسته)',
+			'Enable registration' => 'فعال‌سازی ثبت‌نام', 'Email login' => 'ورود با ایمیل', 'Phone login' => 'ورود با شماره موبایل',
+			'OTP login' => 'ورود با کد یک‌بارمصرف', 'Password login' => 'ورود با گذرواژه', 'Login modal in theme' => 'نمایش پنجره ورود در پوسته',
+			'Verify email on signup' => 'تأیید ایمیل هنگام ثبت‌نام', 'Verify phone on signup' => 'تأیید موبایل هنگام ثبت‌نام',
+			'Ask first/last name' => 'دریافت نام و نام خانوادگی', 'Ask birthday' => 'دریافت تاریخ تولد', 'Require terms' => 'الزام پذیرش قوانین',
+			'Terms text' => 'متن قوانین', 'Captcha' => 'کپچا', 'None' => 'بدون کپچا', 'Google reCAPTCHA v2' => 'گوگل reCAPTCHA نسخه ۲',
+			'Captcha site key' => 'کلید سایت کپچا', 'Captcha secret' => 'کلید محرمانه کپچا', 'Avatar upload' => 'بارگذاری تصویر پروفایل',
+			'Allow profile editing' => 'اجازه ویرایش پروفایل', 'Allow password change' => 'اجازه تغییر گذرواژه',
+			'Email confirmation' => 'تأیید ایمیل', 'Phone confirmation' => 'تأیید شماره موبایل', 'Profile attachments' => 'پیوست‌های پروفایل',
+			'Custom fields' => 'فیلدهای سفارشی', 'Enable tickets' => 'فعال‌سازی تیکت‌ها', 'Allow attachments' => 'اجازه افزودن پیوست',
+			'Allow rating' => 'امکان امتیازدهی', 'Max open tickets' => 'حداکثر تیکت‌های باز', 'Automatic reply' => 'پاسخ خودکار',
+			'Staff roles' => 'نقش‌های پشتیبانی', 'Wallet currency' => 'واحد پول کیف‌پول', 'Minimum withdrawal' => 'حداقل مبلغ برداشت',
+			'Enable SMS' => 'فعال‌سازی پیامک', 'Provider' => 'سرویس‌دهنده', 'IPPanel API' => 'نسخه API آی‌پی‌پنل',
+			'Edge API (edge.ippanel.com)' => 'Edge API (edge.ippanel.com)', 'Legacy API (api2.ippanel.com)' => 'Legacy API (api2.ippanel.com)',
+			'Access key / API key' => 'کلید دسترسی / API', 'Sender number' => 'شماره فرستنده', 'Base URL' => 'نشانی پایه',
+			'OTP pattern code' => 'کد الگوی پیامک رمز یک‌بارمصرف', 'OTP variable name' => 'نام متغیر رمز یک‌بارمصرف',
+			'OTP length' => 'طول رمز یک‌بارمصرف', 'OTP expiry (seconds)' => 'اعتبار رمز (ثانیه)',
+			'Resend delay (seconds)' => 'فاصله ارسال مجدد (ثانیه)', 'Log SMS' => 'ثبت گزارش پیامک‌ها', 'From name' => 'نام فرستنده',
+			'From email' => 'ایمیل فرستنده', 'Email on new ticket' => 'ارسال ایمیل برای تیکت جدید', 'Email on signup' => 'ایمیل خوش‌آمد ثبت‌نام',
+			'Email header' => 'سربرگ ایمیل', 'Email footer' => 'پابرگ ایمیل', 'Delete all data on uninstall' => 'حذف همه داده‌ها هنگام پاک‌کردن افزونه',
+			'- Select page -' => '— انتخاب برگه —', 'Select' => 'انتخاب', 'Use this file' => 'استفاده از این فایل', 'Remove' => 'حذف',
+			'Label' => 'عنوان', 'Icon key' => 'نامک آیکون', 'URL' => 'نشانی پیوند', 'Add shortcut' => 'افزودن میانبر',
+			'slug' => 'شناسه یکتا', 'label' => 'عنوان فیلد',
+			'Add field' => 'افزودن فیلد', 'Required' => 'الزامی', 'option1,option2' => 'گزینه۱,گزینه۲', 'Test mobile number' => 'شماره موبایل آزمایشی',
+			'Send test SMS' => 'ارسال پیامک آزمایشی', 'Vetra Dashboard Settings' => 'تنظیمات پیشخوان وترا',
+			'Settings' => 'تنظیمات', 'Overview' => 'نمای کلی', 'Departments' => 'دپارتمان‌ها', 'Bank Cards' => 'کارت‌های بانکی',
+			'Withdrawals' => 'برداشت‌ها', 'SMS Log' => 'گزارش پیامک‌ها', 'Users' => 'کاربران', 'Vetra' => 'وترا',
+			'Vetra Dashboard' => 'پیشخوان وترا', 'You do not have permission to access this page.' => 'شما اجازه دسترسی به این صفحه را ندارید.',
+			'Tickets' => 'تیکت‌ها', 'Support Departments' => 'دپارتمان‌های پشتیبانی', 'Withdrawal Requests' => 'درخواست‌های برداشت',
+			'Wallets' => 'کیف‌پول‌ها', 'Vetra Overview' => 'نمای کلی وترا', 'Total tickets' => 'مجموع تیکت‌ها',
+			'Open tickets' => 'تیکت‌های باز', 'Pending cards' => 'کارت‌های در انتظار بررسی', 'Pending withdrawals' => 'برداشت‌های در انتظار',
+			'SMS sent' => 'پیامک‌های ارسال‌شده', 'The operation was successful.' => 'عملیات با موفقیت انجام شد.',
+			'The operation failed.' => 'انجام عملیات ناموفق بود.', 'All statuses' => 'همه وضعیت‌ها', 'Filter' => 'فیلتر',
+			'Title' => 'عنوان', 'User' => 'کاربر', 'Status' => 'وضعیت', 'Priority' => 'اولویت', 'Updated' => 'آخرین به‌روزرسانی',
+			'Delete this ticket?' => 'این تیکت حذف شود؟', 'Delete' => 'حذف', 'Department name' => 'نام دپارتمان',
+			'Staff user IDs (comma separated)' => 'شناسه کاربران پشتیبان (با ویرگول جدا شود)', 'Description' => 'توضیحات',
+			'Add' => 'افزودن', 'Name' => 'نام', 'Staff' => 'کارشناسان پشتیبانی', 'All users' => 'همه کاربران',
+			'Specific user' => 'کاربر مشخص', 'Role' => 'نقش کاربری', 'User ID or role' => 'شناسه کاربر یا نقش',
+			'Link' => 'پیوند', 'Content' => 'متن', 'Send' => 'ارسال', 'Audience' => 'مخاطب', 'Date' => 'تاریخ',
+			'Question' => 'پرسش', 'Single choice' => 'تک‌گزینه‌ای', 'Multiple choice' => 'چندگزینه‌ای',
+			'One option per line' => 'هر گزینه را در یک خط وارد کنید', 'Create poll' => 'ایجاد نظرسنجی', 'Type' => 'نوع',
+			'Participants' => 'شرکت‌کنندگان', 'Multiple' => 'چندگزینه‌ای', 'Single' => 'تک‌گزینه‌ای', 'Target' => 'محدوده دسترسی',
+			'External URL (optional)' => 'نشانی خارجی (اختیاری)', 'Media attachment IDs (comma separated)' => 'شناسه پیوست‌های رسانه (با ویرگول جدا شود)',
+			'File password' => 'گذرواژه فایل', 'User ID' => 'شناسه کاربر', 'Role or user ID' => 'نقش یا شناسه کاربر',
+			'Bank' => 'بانک', 'Owner' => 'صاحب حساب', 'Card' => 'شماره کارت', 'Approve' => 'تأیید', 'Reject' => 'رد',
+			'Amount' => 'مبلغ', 'Mark paid' => 'ثبت به‌عنوان پرداخت‌شده', 'Balance' => 'موجودی',
+			'Credit' => 'افزایش موجودی', 'Debit' => 'کاهش موجودی', 'Details' => 'جزئیات', 'Apply' => 'اعمال تغییر',
+			'Phone' => 'تلفن همراه', 'Message' => 'پیام', 'Context' => 'بخش', 'Search' => 'جست‌وجو', 'Username' => 'نام کاربری',
+			'Verify phone' => 'تأیید موبایل', 'Verify email' => 'تأیید ایمیل', 'Verified' => 'تأییدشده',
+			'Open' => 'باز', 'Investigating' => 'در حال بررسی', 'Answered' => 'پاسخ داده‌شده', 'Awaiting Reply' => 'در انتظار پاسخ',
+			'Closed' => 'بسته', 'Low' => 'کم', 'Medium' => 'متوسط', 'High' => 'زیاد', 'General' => 'عمومی',
+			'Open settings' => 'رفتن به تنظیمات', 'Save' => 'ذخیره', 'Edit' => 'ویرایش', 'Close' => 'بستن',
+			'Permission denied.' => 'دسترسی مجاز نیست.', 'Icon key' => 'نامک آیکون',
+			'Please enter a valid Jalali date for %s.' => 'لطفاً تاریخ شمسی معتبر برای «%s» وارد کنید.',
+			'Please enter a valid Jalali birthday.' => 'لطفاً تاریخ تولد شمسی معتبر وارد کنید.',
+		);
+		return isset( $translations[ $text ] ) ? $translations[ $text ] : $translation;
 	}
 
 	public static function register() {
@@ -185,28 +261,38 @@ class VTD_Settings {
 		}
 		$settings = VTD_Options::all();
 		?>
-		<div class="wrap vtd-admin-wrap">
-			<h1><?php esc_html_e( 'Vetra Dashboard Settings', 'vetra-dashboard' ); ?></h1>
-			<nav class="nav-tab-wrapper">
+		<div class="wrap vtd-admin-wrap vtd-settings-wrap" dir="rtl" lang="fa">
+			<header class="vtd-admin-hero">
+				<div class="vtd-admin-hero-icon" aria-hidden="true">✦</div>
+				<div><span class="vtd-admin-eyebrow">VETRA DASHBOARD</span>
+					<h1><?php esc_html_e( 'Vetra Dashboard Settings', 'vetra-dashboard' ); ?></h1>
+					<p>مدیریت یکپارچه امکانات، ظاهر و تجربه کاربری پیشخوان شما</p>
+				</div>
+				<span class="vtd-admin-version">نسخه <?php echo esc_html( VTD_VERSION ); ?></span>
+			</header>
+			<nav class="nav-tab-wrapper vtd-settings-tabs" aria-label="بخش‌های تنظیمات">
 				<?php foreach ( $tabs as $key => $label ) : ?>
 					<a class="nav-tab <?php echo $current === $key ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=vetra-settings&tab=' . $key ) ); ?>"><?php echo esc_html( $label ); ?></a>
 				<?php endforeach; ?>
 			</nav>
 			<?php settings_errors(); ?>
+			<div class="vtd-settings-panel">
 			<form method="post" action="options.php" class="vtd-settings-form">
 				<?php settings_fields( 'vetra_settings_group' ); ?>
-				<table class="form-table" role="presentation">
+				<input type="hidden" name="<?php echo esc_attr( VTD_OPTION_KEY ); ?>[_vtd_tab]" value="<?php echo esc_attr( $current ); ?>">
+				<table class="form-table vtd-settings-table" role="presentation">
 					<tbody>
 					<?php foreach ( self::fields( $current ) as $key => $field ) : ?>
-						<tr>
+						<tr data-vtd-setting="<?php echo esc_attr( $key ); ?>">
 							<th scope="row"><label for="vtd-<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $field['label'] ); ?></label></th>
 							<td><?php self::field( $key, $field, $settings[ $key ] ?? null ); ?></td>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
 				</table>
-				<?php submit_button(); ?>
+				<?php submit_button( 'ذخیره تنظیمات' ); ?>
 			</form>
+			</div>
 			<?php if ( 'sms' === $current ) : ?>
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="vtd-sms-test">
 					<input type="hidden" name="action" value="vtd_sms_test">
@@ -282,14 +368,14 @@ class VTD_Settings {
 				break;
 			case 'shortcuts':
 				$rows = array_values( (array) $value );
-				echo '<div class="vtd-repeater" data-repeater="shortcuts">';
+				echo '<div class="vtd-repeater" data-repeater="shortcuts" data-repeater-name="dashboard_shortcuts">';
 				echo '<div class="vtd-repeater-rows">';
 				foreach ( $rows as $i => $row ) {
 					$row = wp_parse_args( (array) $row, array( 'label' => '', 'icon' => '', 'url' => '' ) );
 					echo '<div class="vtd-repeater-row">';
 					echo '<input type="text" name="' . esc_attr( $name . '[' . $i . '][label]' ) . '" value="' . esc_attr( $row['label'] ) . '" placeholder="' . esc_attr__( 'Label', 'vetra-dashboard' ) . '">';
 					echo '<input type="text" name="' . esc_attr( $name . '[' . $i . '][icon]' ) . '" value="' . esc_attr( $row['icon'] ) . '" placeholder="' . esc_attr__( 'Icon key', 'vetra-dashboard' ) . '">';
-					echo '<input type="text" name="' . esc_attr( $name . '[' . $i . '][url]' ) . '" value="' . esc_attr( $row['url'] ) . '" placeholder="URL">';
+					echo '<input type="text" name="' . esc_attr( $name . '[' . $i . '][url]' ) . '" value="' . esc_attr( $row['url'] ) . '" placeholder="' . esc_attr__( 'URL', 'vetra-dashboard' ) . '">';
 					echo '<button type="button" class="button vtd-repeater-remove">&times;</button>';
 					echo '</div>';
 				}
@@ -303,7 +389,7 @@ class VTD_Settings {
 	}
 
 	protected static function repeater_fields( $name, $rows ) {
-		echo '<div class="vtd-repeater" data-repeater="profile_fields">';
+		echo '<div class="vtd-repeater" data-repeater="profile_fields" data-repeater-name="profile_custom_fields">';
 		echo '<div class="vtd-repeater-rows">';
 		$rows = array_values( $rows );
 		foreach ( $rows as $i => $row ) {
@@ -322,7 +408,7 @@ class VTD_Settings {
 			<input type="text" name="<?php echo esc_attr( $name . '[' . $index . '][label]' ); ?>" value="<?php echo esc_attr( $row['label'] ); ?>" placeholder="<?php esc_attr_e( 'label', 'vetra-dashboard' ); ?>">
 			<select name="<?php echo esc_attr( $name . '[' . $index . '][type]' ); ?>">
 				<?php foreach ( array( 'text', 'email', 'tel', 'number', 'date', 'url', 'textarea', 'select' ) as $type ) : ?>
-					<option value="<?php echo esc_attr( $type ); ?>" <?php selected( $row['type'], $type ); ?>><?php echo esc_html( $type ); ?></option>
+					<option value="<?php echo esc_attr( $type ); ?>" <?php selected( $row['type'], $type ); ?>><?php echo esc_html( self::field_type_label( $type ) ); ?></option>
 				<?php endforeach; ?>
 			</select>
 			<input type="text" name="<?php echo esc_attr( $name . '[' . $index . '][options]' ); ?>" value="<?php echo esc_attr( $row['options'] ); ?>" placeholder="<?php esc_attr_e( 'option1,option2', 'vetra-dashboard' ); ?>">
@@ -332,10 +418,23 @@ class VTD_Settings {
 		<?php
 	}
 
+	protected static function field_type_label( $type ) {
+		$labels = array(
+			'text' => 'متن', 'email' => 'ایمیل', 'tel' => 'تلفن', 'number' => 'عدد',
+			'date' => 'تاریخ شمسی', 'url' => 'پیوند', 'textarea' => 'متن چندخطی', 'select' => 'فهرست انتخاب',
+		);
+		return $labels[ $type ] ?? $type;
+	}
+
 	public static function sanitize( $input ) {
 		$input    = is_array( $input ) ? $input : array();
 		$defaults = VTD_Options::defaults();
-		$clean    = array();
+		$existing = get_option( VTD_OPTION_KEY, array() );
+		$existing = is_array( $existing ) ? $existing : array();
+
+		$tab        = isset( $input['_vtd_tab'] ) ? sanitize_key( $input['_vtd_tab'] ) : '';
+		$tab_fields = $tab ? array_keys( self::fields( $tab ) ) : array();
+		$clean      = array();
 
 		$switches = array(
 			'register_enabled', 'email_login', 'phone_login', 'otp_login', 'password_login', 'login_modal',
@@ -349,11 +448,15 @@ class VTD_Settings {
 
 		foreach ( $defaults as $key => $default ) {
 			if ( in_array( $key, $switches, true ) ) {
-				$clean[ $key ] = ! empty( $input[ $key ] ) ? 1 : 0;
+				if ( $tab && ! in_array( $key, $tab_fields, true ) ) {
+					$clean[ $key ] = array_key_exists( $key, $existing ) ? (int) $existing[ $key ] : (int) $default;
+				} else {
+					$clean[ $key ] = ! empty( $input[ $key ] ) ? 1 : 0;
+				}
 				continue;
 			}
 			if ( ! array_key_exists( $key, $input ) ) {
-				$clean[ $key ] = $default;
+				$clean[ $key ] = array_key_exists( $key, $existing ) ? $existing[ $key ] : $default;
 				continue;
 			}
 			$value = $input[ $key ];
@@ -404,7 +507,7 @@ class VTD_Settings {
 				case 'profile_custom_fields':
 					$clean[ $key ] = array();
 					foreach ( (array) $value as $row ) {
-						if ( empty( $row['slug'] ) || empty( $row['label'] ) ) {
+						if ( empty( $row['slug'] ) || empty( $row['label'] ) || 'birthday' === sanitize_key( $row['slug'] ) ) {
 							continue;
 						}
 						$clean[ $key ][] = array(
@@ -434,7 +537,8 @@ class VTD_Settings {
 			}
 		}
 
-		VTD_Roles::sync_staff_caps();
+		unset( $clean['_vtd_tab'] );
+		VTD_Roles::maybe_sync();
 		return $clean;
 	}
 }

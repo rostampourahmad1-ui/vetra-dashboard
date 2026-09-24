@@ -14,7 +14,6 @@ class VTD_Router {
 		add_filter( 'query_vars', array( __CLASS__, 'query_vars' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'handle_actions' ) );
 		add_filter( 'login_redirect', array( __CLASS__, 'login_redirect' ), 10, 3 );
-		add_action( 'wp_logout', array( __CLASS__, 'after_logout' ) );
 		add_filter( 'template_include', array( __CLASS__, 'template_include' ), 99 );
 		add_filter( 'body_class', array( __CLASS__, 'body_class' ) );
 	}
@@ -97,18 +96,18 @@ class VTD_Router {
 
 	public static function sections() {
 		$sections = array(
-			'dashboard'     => array( 'label' => __( 'Dashboard', 'vetra-dashboard' ), 'icon' => 'dashboard', 'callback' => array( 'VTD_Dashboard', 'render' ) ),
-			'profile'       => array( 'label' => __( 'Profile', 'vetra-dashboard' ), 'icon' => 'profile', 'callback' => array( 'VTD_Profile', 'render' ) ),
-			'tickets'       => array( 'label' => __( 'Support Requests', 'vetra-dashboard' ), 'icon' => 'ticket', 'callback' => array( 'VTD_Tickets', 'render' ) ),
-			'new-ticket'    => array( 'label' => __( 'New Ticket', 'vetra-dashboard' ), 'icon' => 'plus', 'callback' => array( 'VTD_Tickets', 'render_new' ), 'hidden' => true ),
-			'ticket'        => array( 'label' => __( 'Ticket', 'vetra-dashboard' ), 'icon' => 'ticket', 'callback' => array( 'VTD_Tickets', 'render_single' ), 'hidden' => true ),
-			'support-center' => array( 'label' => __( 'Support Center', 'vetra-dashboard' ), 'icon' => 'ticket', 'callback' => array( 'VTD_Tickets', 'render_staff' ), 'staff' => true ),
-			'notifications' => array( 'label' => __( 'Notifications', 'vetra-dashboard' ), 'icon' => 'bell', 'callback' => array( 'VTD_Notifications', 'render' ) ),
-			'polls'         => array( 'label' => __( 'Polls', 'vetra-dashboard' ), 'icon' => 'poll', 'callback' => array( 'VTD_Polls', 'render' ) ),
-			'attachments'   => array( 'label' => __( 'Attachments', 'vetra-dashboard' ), 'icon' => 'download', 'callback' => array( 'VTD_Attachments', 'render' ) ),
-			'wallet'        => array( 'label' => __( 'My Wallet', 'vetra-dashboard' ), 'icon' => 'wallet', 'callback' => array( 'VTD_Wallet', 'render' ) ),
-			'banking'       => array( 'label' => __( 'Bank Information', 'vetra-dashboard' ), 'icon' => 'bank', 'callback' => array( 'VTD_Banking', 'render' ) ),
-			'comments'      => array( 'label' => __( 'Comments', 'vetra-dashboard' ), 'icon' => 'comment', 'callback' => array( 'VTD_Comments', 'render' ) ),
+			'dashboard'      => array( 'label' => 'داشبورد', 'icon' => 'dashboard', 'callback' => array( 'VTD_Dashboard', 'render' ) ),
+			'profile'        => array( 'label' => 'پروفایل', 'icon' => 'profile', 'callback' => array( 'VTD_Profile', 'render' ) ),
+			'tickets'        => array( 'label' => 'درخواست‌های پشتیبانی', 'icon' => 'ticket', 'callback' => array( 'VTD_Tickets', 'render' ) ),
+			'new-ticket'     => array( 'label' => 'تیکت جدید', 'icon' => 'plus', 'callback' => array( 'VTD_Tickets', 'render_new' ), 'hidden' => true ),
+			'ticket'         => array( 'label' => 'تیکت', 'icon' => 'ticket', 'callback' => array( 'VTD_Tickets', 'render_single' ), 'hidden' => true ),
+			'support-center' => array( 'label' => 'مرکز پشتیبانی', 'icon' => 'ticket', 'callback' => array( 'VTD_Tickets', 'render_staff' ), 'staff' => true ),
+			'notifications'  => array( 'label' => 'اعلان‌ها', 'icon' => 'bell', 'callback' => array( 'VTD_Notifications', 'render' ) ),
+			'polls'          => array( 'label' => 'نظرسنجی‌ها', 'icon' => 'poll', 'callback' => array( 'VTD_Polls', 'render' ) ),
+			'attachments'    => array( 'label' => 'پیوست‌ها', 'icon' => 'download', 'callback' => array( 'VTD_Attachments', 'render' ) ),
+			'wallet'         => array( 'label' => 'کیف پول', 'icon' => 'wallet', 'callback' => array( 'VTD_Wallet', 'render' ) ),
+			'banking'        => array( 'label' => 'اطلاعات بانکی', 'icon' => 'bank', 'callback' => array( 'VTD_Banking', 'render' ) ),
+			'comments'       => array( 'label' => 'دیدگاه‌ها', 'icon' => 'comment', 'callback' => array( 'VTD_Comments', 'render' ) ),
 		);
 
 		$settings = VTD_Options::all();
@@ -170,11 +169,4 @@ class VTD_Router {
 		return $redirect_to;
 	}
 
-	public static function after_logout() {
-		$target = VTD_Options::get( 'after_login_redirect', 'panel' );
-		if ( 'panel' === $target && ! isset( $_GET['loggedout'] ) ) {
-			wp_safe_redirect( self::login_url() );
-			exit;
-		}
-	}
 }

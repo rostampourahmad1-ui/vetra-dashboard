@@ -59,29 +59,36 @@ defined( 'ABSPATH' ) || exit;
 					<option value="female" <?php selected( $data['gender'], 'female' ); ?>><?php esc_html_e( 'Female', 'vetra-dashboard' ); ?></option>
 				</select>
 			</label>
-			<label class="vtd-field">
-				<span><?php esc_html_e( 'Birthday', 'vetra-dashboard' ); ?></span>
-				<input type="date" name="birthday" value="<?php echo esc_attr( $data['birthday'] ); ?>">
-			</label>
+			<div class="vtd-field">
+				<label for="vtd-profile-birthday"><span>تاریخ تولد</span></label>
+				<?php echo vtd_jalali_date_input( 'birthday', $data['birthday'], false, 'vtd-profile-birthday' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			</div>
 			<label class="vtd-field vtd-field-full">
 				<span><?php esc_html_e( 'About', 'vetra-dashboard' ); ?></span>
 				<textarea name="about" rows="4"><?php echo esc_textarea( $data['about'] ); ?></textarea>
 			</label>
 
 			<?php foreach ( $fields as $slug => $field ) : ?>
-				<label class="vtd-field">
-					<span><?php echo esc_html( $field['label'] ); ?></span>
-					<?php if ( 'select' === $field['type'] ) : ?>
-						<select name="<?php echo esc_attr( $slug ); ?>">
-							<option value=""><?php esc_html_e( 'Select', 'vetra-dashboard' ); ?></option>
-							<?php foreach ( $field['options'] as $option ) : ?>
-								<option value="<?php echo esc_attr( $option ); ?>" <?php selected( $data[ $slug ] ?? '', $option ); ?>><?php echo esc_html( $option ); ?></option>
-							<?php endforeach; ?>
-						</select>
-					<?php else : ?>
-						<input type="<?php echo esc_attr( $field['type'] ); ?>" name="<?php echo esc_attr( $slug ); ?>" value="<?php echo esc_attr( $data[ $slug ] ?? '' ); ?>" <?php echo $field['required'] ? 'required' : ''; ?>>
-					<?php endif; ?>
-				</label>
+				<?php if ( 'date' === $field['type'] ) : ?>
+					<div class="vtd-field">
+						<label for="vtd-profile-field-<?php echo esc_attr( $slug ); ?>"><span><?php echo esc_html( $field['label'] ); ?></span></label>
+						<?php echo vtd_jalali_date_input( $slug, $data[ $slug ] ?? '', $field['required'], 'vtd-profile-field-' . $slug ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</div>
+				<?php else : ?>
+					<label class="vtd-field">
+						<span><?php echo esc_html( $field['label'] ); ?></span>
+						<?php if ( 'select' === $field['type'] ) : ?>
+							<select name="<?php echo esc_attr( $slug ); ?>">
+								<option value=""><?php esc_html_e( 'Select', 'vetra-dashboard' ); ?></option>
+								<?php foreach ( $field['options'] as $option ) : ?>
+									<option value="<?php echo esc_attr( $option ); ?>" <?php selected( $data[ $slug ] ?? '', $option ); ?>><?php echo esc_html( $option ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						<?php else : ?>
+							<input type="<?php echo esc_attr( $field['type'] ); ?>" name="<?php echo esc_attr( $slug ); ?>" value="<?php echo esc_attr( $data[ $slug ] ?? '' ); ?>" <?php echo $field['required'] ? 'required' : ''; ?>>
+						<?php endif; ?>
+					</label>
+				<?php endif; ?>
 			<?php endforeach; ?>
 
 			<div class="vtd-field-full vtd-form-actions">

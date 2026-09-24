@@ -49,13 +49,13 @@ class VTD_Assets {
 	}
 
 	public static function front() {
-		$needs_modal = VTD_Options::get( 'login_modal', 1 ) && ! is_user_logged_in();
-		if ( ! self::$panel_loaded && ! self::is_auth_page() && ! self::is_panel_page() && ! $needs_modal ) {
+		if ( ! self::$panel_loaded && ! self::is_auth_page() && ! self::has_vtd_content() ) {
 			return;
 		}
 
 		wp_enqueue_style( 'vtd-front', VTD_ASSETS . 'css/vetra.css', array(), VTD_VERSION );
-		wp_enqueue_script( 'vtd-front', VTD_ASSETS . 'js/vetra.js', array(), VTD_VERSION, true );
+		wp_enqueue_script( 'vtd-jalali', VTD_ASSETS . 'js/jalali.js', array(), VTD_VERSION, true );
+		wp_enqueue_script( 'vtd-front', VTD_ASSETS . 'js/vetra.js', array( 'vtd-jalali' ), VTD_VERSION, true );
 
 		if ( self::is_auth_page() ) {
 			wp_enqueue_style( 'vtd-auth', VTD_ASSETS . 'css/auth.css', array( 'vtd-front' ), VTD_VERSION );
@@ -88,8 +88,11 @@ class VTD_Assets {
 		if ( ! wp_style_is( 'vtd-front', 'enqueued' ) ) {
 			wp_enqueue_style( 'vtd-front', VTD_ASSETS . 'css/vetra.css', array(), VTD_VERSION );
 		}
+		if ( ! wp_script_is( 'vtd-jalali', 'enqueued' ) ) {
+			wp_enqueue_script( 'vtd-jalali', VTD_ASSETS . 'js/jalali.js', array(), VTD_VERSION, true );
+		}
 		if ( ! wp_script_is( 'vtd-front', 'enqueued' ) ) {
-			wp_enqueue_script( 'vtd-front', VTD_ASSETS . 'js/vetra.js', array(), VTD_VERSION, true );
+			wp_enqueue_script( 'vtd-front', VTD_ASSETS . 'js/vetra.js', array( 'vtd-jalali' ), VTD_VERSION, true );
 		}
 	}
 
@@ -111,17 +114,30 @@ class VTD_Assets {
 		if ( $panel && is_page( $panel ) ) {
 			return true;
 		}
-		if ( is_page( array( 'vtd-panel' ) ) ) {
+		return is_page( array( 'vtd-panel' ) );
+	}
+
+	public static function has_vtd_content() {
+		if ( self::is_panel_page() ) {
 			return true;
 		}
 		$post = get_post();
-		if ( $post && ! empty( $post->post_content ) ) {
-			return has_shortcode( $post->post_content, 'vetra_dashboard' );
+		if ( ! $post || empty( $post->post_content ) ) {
+			return false;
+		}
+		foreach ( array( 'vetra_dashboard', 'vetra_login', 'vetra_register', 'vetra_reset_password', 'vetra_profile_links' ) as $shortcode ) {
+			if ( has_shortcode( $post->post_content, $shortcode ) ) {
+				return true;
+			}
 		}
 		return false;
 	}
 
 	public static function admin( $hook ) {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( 0 !== strpos( $page, 'vetra-' ) && 'vetra-dashboard' !== $page ) {
+			return;
+		}
 		wp_enqueue_style( 'vtd-admin', VTD_ASSETS . 'css/admin.css', array(), VTD_VERSION );
 		wp_enqueue_media();
 		wp_enqueue_script( 'vtd-admin', VTD_ASSETS . 'js/admin.js', array( 'jquery', 'wp-color-picker' ), VTD_VERSION, true );

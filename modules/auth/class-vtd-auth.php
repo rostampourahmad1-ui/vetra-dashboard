@@ -9,10 +9,11 @@ defined( 'ABSPATH' ) || exit;
 
 class VTD_Auth {
 
-	public static $errors    = array();
-	public static $success   = array();
-	public static $form_data = array();
-	public static $stage     = '';
+	public static $errors         = array();
+	public static $success        = array();
+	public static $form_data      = array();
+	public static $stage          = '';
+	public static $modal_requested = false;
 
 	const PHONE_META = 'vtd_phone';
 	const PHONE_VERIFIED_META = 'vtd_phone_verified';
@@ -31,6 +32,9 @@ class VTD_Auth {
 			return;
 		}
 		if ( ! VTD_Options::get( 'login_modal', 1 ) ) {
+			return;
+		}
+		if ( ! self::$modal_requested && ! apply_filters( 'vtd_render_login_modal', false ) ) {
 			return;
 		}
 		VTD_Assets::panel_assets();
@@ -100,9 +104,9 @@ class VTD_Auth {
 		return null;
 	}
 
-	public static function guard( $panel_html ) {
+	public static function guard( $callback ) {
 		if ( is_user_logged_in() ) {
-			return $panel_html;
+			return is_callable( $callback ) ? call_user_func( $callback ) : (string) $callback;
 		}
 		VTD_Assets::panel_assets();
 		$html  = '<div class="vtd-guard">';
@@ -328,7 +332,8 @@ class VTD_Auth {
 		$first_name = self::field( 'first_name' );
 		$last_name  = self::field( 'last_name' );
 
-		self::$form_data = compact( 'username', 'email', 'phone', 'first_name', 'last_name' );
+		$birthday = self::field( 'birthday' );
+		self::$form_data = compact( 'username', 'email', 'phone', 'first_name', 'last_name', 'birthday' );
 
 		if ( ! VTD_Options::get( 'register_first_last', 1 ) ) {
 			$first_name = '';
@@ -355,6 +360,9 @@ class VTD_Auth {
 		}
 		if ( strlen( $password ) < 8 ) {
 			self::$errors[] = __( 'Password must be at least 8 characters long.', 'vetra-dashboard' );
+		}
+		if ( '' !== $birthday && '' === vtd_jalali_to_gregorian( $birthday ) ) {
+			self::$errors[] = __( 'لطفاً تاریخ تولد شمسی معتبر وارد کنید.', 'vetra-dashboard' );
 		}
 		if ( VTD_Options::get( 'register_terms', 1 ) && empty( $_POST['terms'] ) ) {
 			self::$errors[] = __( 'Please confirm the rules.', 'vetra-dashboard' );
@@ -392,7 +400,7 @@ class VTD_Auth {
 		} else {
 			update_user_meta( $user_id, self::EMAIL_VERIFIED_META, 1 );
 		}
-		update_user_meta( $user_id, 'vtd_birthday', self::field( 'birthday' ) );
+		update_user_meta( $user_id, 'vtd_birthday', '' !== $birthday ? vtd_jalali_to_gregorian( $birthday ) : '' );
 
 		do_action( 'vtd_user_registered', $user_id );
 

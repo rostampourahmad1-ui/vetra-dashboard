@@ -15,12 +15,17 @@ class VTD_Notifications {
 		add_action( 'vtd_ticket_replied', array( __CLASS__, 'on_reply' ), 10, 4 );
 	}
 
+	public static function user_role( $user_id ) {
+		$user  = get_userdata( $user_id );
+		$roles = $user ? (array) $user->roles : array();
+		return ! empty( $roles ) ? (string) $roles[0] : '';
+	}
+
 	public static function audience_query( $user_id ) {
-		$roles = (array) get_userdata( $user_id )->roles;
 		return array(
 			'all'  => true,
 			'user' => (int) $user_id,
-			'role' => $roles,
+			'role' => self::user_role( $user_id ),
 		);
 	}
 
@@ -29,8 +34,7 @@ class VTD_Notifications {
 		$table = VTD_DB::notifications();
 		$read  = VTD_DB::notification_read();
 
-		$roles  = (array) get_userdata( $user_id )->roles;
-		$role   = ! empty( $roles ) ? $roles[0] : '';
+		$role   = self::user_role( $user_id );
 		$limit  = isset( $args['limit'] ) ? (int) $args['limit'] : 10;
 		$offset = isset( $args['offset'] ) ? (int) $args['offset'] : 0;
 
@@ -54,8 +58,7 @@ class VTD_Notifications {
 	public static function count( $user_id ) {
 		global $wpdb;
 		$table = VTD_DB::notifications();
-		$roles = (array) get_userdata( $user_id )->roles;
-		$role  = ! empty( $roles ) ? $roles[0] : '';
+		$role  = self::user_role( $user_id );
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table}
@@ -72,8 +75,7 @@ class VTD_Notifications {
 		global $wpdb;
 		$table = VTD_DB::notifications();
 		$read  = VTD_DB::notification_read();
-		$roles = (array) get_userdata( $user_id )->roles;
-		$role  = ! empty( $roles ) ? $roles[0] : '';
+		$role  = self::user_role( $user_id );
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table} n

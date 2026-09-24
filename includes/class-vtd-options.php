@@ -64,7 +64,6 @@ class VTD_Options {
 			'profile_avatar'      => 1,
 			'profile_custom_fields' => array(
 				array( 'slug' => 'national_code', 'label' => 'کد ملی', 'type' => 'text', 'required' => 0 ),
-				array( 'slug' => 'birthday', 'label' => 'تاریخ تولد', 'type' => 'date', 'required' => 0 ),
 			),
 			'profile_edit'        => 1,
 			'profile_change_pass' => 1,

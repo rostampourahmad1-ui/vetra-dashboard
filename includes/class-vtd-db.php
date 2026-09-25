@@ -82,6 +82,10 @@ class VTD_DB {
 		return self::table( 'otp' );
 	}
 
+	public static function change_requests() {
+		return self::table( 'change_requests' );
+	}
+
 	public static function schema() {
 		global $wpdb;
 		$charset = $wpdb->get_charset_collate();
@@ -289,6 +293,23 @@ class VTD_DB {
 			created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
 			PRIMARY KEY  (id),
 			KEY phone (phone)
+		) $charset;";
+
+		$sql[] = "CREATE TABLE " . self::change_requests() . " (
+			request_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			user_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			field_name VARCHAR(100) NOT NULL,
+			requested_value VARCHAR(255) NOT NULL,
+			reason TEXT NULL,
+			document_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			status VARCHAR(20) NOT NULL DEFAULT 'pending',
+			admin_note TEXT NULL,
+			approved_by BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+			updated_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+			PRIMARY KEY  (request_id),
+			KEY user_id (user_id),
+			KEY status (status)
 		) $charset;";
 
 		return $sql;

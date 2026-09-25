@@ -51,6 +51,7 @@ class VTD_Router {
 	public static function query_vars( $vars ) {
 		$vars[] = 'vtd';
 		$vars[] = 'vtd_action';
+		$vars[] = 'ticket';
 		return $vars;
 	}
 
@@ -234,6 +235,46 @@ class VTD_Router {
 	}
 
 	public static function handle_actions() {
+		// Handle profile change request
+		if ( isset( $_POST['vtd_action'] ) && 'profile_change_request' === $_POST['vtd_action'] && is_user_logged_in() ) {
+			$nonce = isset( $_POST['vtd_change_request_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['vtd_change_request_nonce'] ) ) : '';
+			if ( wp_verify_nonce( $nonce, 'vtd_change_request' ) ) {
+				$user_id = get_current_user_id();
+				$field = sanitize_key( wp_unslash( $_POST['change_field'] ?? '' ) );
+				$value = sanitize_text_field( wp_unslash( $_POST['change_value'] ?? '' ) );
+				$reason = sanitize_textarea_field( wp_unslash( $_POST['change_reason'] ?? '' ) );
+				$doc_id = 0;
+
+				if ( ! empty( $_FILES['change_document']['name'] ) ) {
+					require_once ABSPATH . 'wp-admin/includes/file.php';
+					require_once ABSPATH . 'wp-admin/includes/media.php';
+					$doc_id = media_handle_sideload( $_FILES['change_document'], 0, __( 'Change request document', 'vetra-dashboard' ) );
+					if ( is_wp_error( $doc_id ) ) {
+						$doc_id = 0;
+					}
+				}
+
+				if ( $field && $value ) {
+					global $wpdb;
+					$wpdb->insert(
+						$wpdb->prefix . 'vtd_change_requests',
+						array(
+							'user_id' => $user_id,
+							'field_name' => $field,
+							'requested_value' => $value,
+							'reason' => $reason,
+							'document_id' => (int) $doc_id,
+							'status' => 'pending',
+							'created_at' => current_time( 'mysql' ),
+						),
+						array( '%d', '%s', '%s', '%s', '%d', '%s', '%s' )
+					);
+					wp_safe_redirect( vtd_panel_url( array( 'vtd' => 'profile', 'change_request' => 'submitted' ) ) );
+					exit;
+				}
+			}
+		}
+
 		if ( isset( $_GET['vtd_action'] ) && 'logout' === $_GET['vtd_action'] ) {
 			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 			if ( wp_verify_nonce( $nonce, 'vtd_logout' ) ) {

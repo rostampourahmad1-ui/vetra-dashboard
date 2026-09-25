@@ -6,6 +6,9 @@
  */
 
 defined( 'ABSPATH' ) || exit;
+
+$cancel_enabled = $cancel_enabled ?? VTD_Options::get( 'ticket_cancel_enabled', 1 );
+$rating_enabled = $rating_enabled ?? VTD_Options::get( 'ticket_rating', 1 );
 ?>
 <div class="vtd-ticket-single" data-vtd-ticket="<?php echo (int) $ticket->ticket_id; ?>">
 	<section class="vtd-card vtd-ticket-header">
@@ -21,8 +24,21 @@ defined( 'ABSPATH' ) || exit;
 			<?php if ( $is_staff ) : ?>
 				<button type="button" class="vtd-btn vtd-btn-outline" data-vtd-ticket-star><?php echo vtd_icon( 'star' ); // phpcs:ignore ?> <?php esc_html_e( 'Star', 'vetra-dashboard' ); ?></button>
 			<?php endif; ?>
-			<?php if ( 'closed' !== $ticket->status ) : ?>
-				<button type="button" class="vtd-btn vtd-btn-danger" data-vtd-ticket-close><?php esc_html_e( 'Close ticket', 'vetra-dashboard' ); ?></button>
+			<?php if ( $cancel_enabled && 'closed' !== $ticket->status && ! $is_staff ) : ?>
+				<form method="post" style="display:inline">
+					<?php wp_nonce_field( 'vtd_ticket', 'vtd_ticket_nonce' ); ?>
+					<input type="hidden" name="vtd_ticket_action" value="cancel">
+					<input type="hidden" name="ticket_id" value="<?php echo (int) $ticket->ticket_id; ?>">
+					<button type="submit" class="vtd-btn vtd-btn-danger" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to cancel this ticket?', 'vetra-dashboard' ); ?>')"><?php esc_html_e( 'Cancel ticket', 'vetra-dashboard' ); ?></button>
+				</form>
+			<?php endif; ?>
+			<?php if ( $cancel_enabled && 'closed' !== $ticket->status ) : ?>
+				<form method="post" style="display:inline">
+					<?php wp_nonce_field( 'vtd_ticket', 'vtd_ticket_nonce' ); ?>
+					<input type="hidden" name="vtd_ticket_action" value="close">
+					<input type="hidden" name="ticket_id" value="<?php echo (int) $ticket->ticket_id; ?>">
+					<button type="submit" class="vtd-btn vtd-btn-outline"><?php esc_html_e( 'Close ticket', 'vetra-dashboard' ); ?></button>
+				</form>
 			<?php endif; ?>
 		</div>
 	</section>
@@ -77,21 +93,38 @@ defined( 'ABSPATH' ) || exit;
 		</section>
 	<?php endif; ?>
 
-	<?php if ( VTD_Options::get( 'ticket_rating', 1 ) && ! $is_staff && 'closed' === $ticket->status && ! $rating ) : ?>
+	<?php if ( $rating_enabled && ! $is_staff && 'closed' === $ticket->status && ! $rating ) : ?>
 		<section class="vtd-card">
 			<h3><?php esc_html_e( 'How was the support?', 'vetra-dashboard' ); ?></h3>
-			<form class="vtd-form" data-vtd-ticket-rate>
+			<form class="vtd-form" method="post" data-vtd-ticket-rate>
+				<?php wp_nonce_field( 'vtd_ticket', 'vtd_ticket_nonce' ); ?>
+				<input type="hidden" name="vtd_ticket_action" value="rate">
+				<input type="hidden" name="ticket_id" value="<?php echo (int) $ticket->ticket_id; ?>">
+				<input type="hidden" name="score" value="5">
 				<div class="vtd-stars" data-vtd-stars>
 					<?php for ( $i = 1; $i <= 5; $i++ ) : ?>
 						<button type="button" data-value="<?php echo (int) $i; ?>"><?php echo vtd_icon( 'star' ); // phpcs:ignore ?></button>
 					<?php endfor; ?>
-					<input type="hidden" name="score" value="5">
 				</div>
 				<label class="vtd-field">
 					<textarea name="feedback" rows="3" placeholder="<?php esc_attr_e( 'Your feedback...', 'vetra-dashboard' ); ?>"></textarea>
 				</label>
 				<button type="submit" class="vtd-btn vtd-btn-primary"><?php esc_html_e( 'Submit rating', 'vetra-dashboard' ); ?></button>
 			</form>
+		</section>
+	<?php endif; ?>
+
+	<?php if ( $rating ) : ?>
+		<section class="vtd-card vtd-ticket-rating-display">
+			<h3><?php esc_html_e( 'Your rating', 'vetra-dashboard' ); ?></h3>
+			<div class="vtd-stars vtd-stars-display">
+				<?php for ( $i = 1; $i <= 5; $i++ ) : ?>
+					<span class="<?php echo $i <= (int) $rating->score ? 'is-active' : ''; ?>"><?php echo vtd_icon( 'star' ); // phpcs:ignore ?></span>
+				<?php endfor; ?>
+			</div>
+			<?php if ( $rating->feedback ) : ?>
+				<p class="vtd-muted"><?php echo esc_html( $rating->feedback ); ?></p>
+			<?php endif; ?>
 		</section>
 	<?php endif; ?>
 </div>

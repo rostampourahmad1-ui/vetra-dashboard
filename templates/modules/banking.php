@@ -58,10 +58,10 @@ $vtd_statuses = array(
 								<?php echo esc_html( $vtd_statuses[ $card->card_status ] ?? $card->card_status ); ?>
 							</span>
 						</header>
-						<div class="vtd-bank-number"><?php echo esc_html( implode( ' ', str_split( $card->card_number, 4 ) ) ); ?></div>
+						<div class="vtd-bank-number"><?php echo esc_html( implode( '-', str_split( $card->card_number, 4 ) ) ); ?></div>
 						<footer>
 							<span><?php echo esc_html( $card->card_owner ); ?></span>
-							<span dir="ltr">IR<?php echo esc_html( $card->card_sheba ); ?></span>
+							<span dir="ltr">IR<?php echo esc_html( implode( '-', str_split( str_pad( $card->card_sheba, 24, '0', STR_PAD_LEFT ), 2 ) ) ); ?></span>
 						</footer>
 						<button type="button" class="vtd-card-delete" data-vtd-card-delete="<?php echo (int) $card->card_id; ?>"><?php echo vtd_icon( 'close' ); // phpcs:ignore ?></button>
 					</article>

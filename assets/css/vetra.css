@@ -1245,3 +1245,191 @@ body.vtd-body {
 .vtd-jalali-calendar-grid button { border: 0; background: transparent; color: var(--vtd-text); cursor: pointer; font: inherit; font-size: 11px; }
 .vtd-jalali-calendar-grid button:hover { background: var(--vtd-primary); color: #fff; }
 .vtd-jalali-calendar-grid .is-empty { visibility: hidden; }
+
+/* Panel footer */
+.vtd-panel-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 16px 24px;
+	border-top: 1px solid var(--vtd-border);
+	margin-top: auto;
+}
+
+.vtd-social-links {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.vtd-social-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px;
+	border-radius: 10px;
+	background: var(--vtd-surface-2);
+	color: var(--vtd-muted);
+	font-size: 13px;
+	font-weight: 600;
+	transition: all .2s ease;
+	text-decoration: none;
+}
+
+.vtd-social-link:hover {
+	background: var(--vtd-primary);
+	color: #fff;
+	transform: translateY(-1px);
+}
+
+.vtd-social-link svg {
+	width: 18px;
+	height: 18px;
+}
+
+.vtd-copyright {
+	font-size: 12px;
+	color: var(--vtd-muted);
+	text-align: center;
+}
+
+@media (max-width: 640px) {
+	.vtd-panel-footer {
+		flex-direction: column;
+		text-align: center;
+	}
+}
+
+/* Ticket FAQ step */
+.vtd-ticket-faq {
+	margin-bottom: 16px;
+}
+
+.vtd-ticket-faq h3 {
+	margin-bottom: 12px;
+}
+
+.vtd-faq-content {
+	background: var(--vtd-surface-2);
+	border-radius: var(--vtd-radius);
+	padding: 16px;
+	margin-bottom: 16px;
+	line-height: 1.7;
+}
+
+.vtd-faq-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.vtd-checkbox-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	font-size: 14px;
+}
+
+.vtd-checkbox-label input[type="checkbox"] {
+	width: 18px;
+	height: 18px;
+}
+
+/* Stars display */
+.vtd-stars-display {
+	display: inline-flex;
+	gap: 2px;
+}
+
+.vtd-stars-display span {
+	color: var(--vtd-muted);
+}
+
+.vtd-stars-display span.is-active {
+	color: #f59e0b;
+}
+
+.vtd-stars-display svg {
+	width: 20px;
+	height: 20px;
+	fill: currentColor;
+}
+
+.vtd-stars-mini {
+	display: inline-flex;
+	gap: 1px;
+	font-size: 14px;
+	color: var(--vtd-muted);
+}
+
+.vtd-stars-mini span.is-active {
+	color: #f59e0b;
+}
+
+/* Ticket row actions */
+.vtd-ticket-row-actions {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.vtd-btn-sm {
+	padding: 4px 10px;
+	font-size: 12px;
+}
+
+/* Profile change request */
+.vtd-change-request {
+	border: 2px dashed var(--vtd-border);
+}
+
+.vtd-change-request .vtd-alert {
+	margin-bottom: 16px;
+}
+
+/* Read-only field styling */
+input[readonly], textarea[readonly], select[disabled] {
+	background: var(--vtd-surface-2) !important;
+	cursor: not-allowed !important;
+	opacity: .7;
+}
+
+/* Staff assignment in settings */
+.vtd-staff-assignment {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.vtd-staff-assign-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.vtd-staff-assign-row strong {
+	min-width: 120px;
+}
+
+/* Social links repeater in settings */
+.vtd-social-row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-bottom: 8px;
+}
+
+.vtd-social-row select {
+	min-width: 120px;
+}
+
+.vtd-social-platform {
+	max-width: 140px;
+}

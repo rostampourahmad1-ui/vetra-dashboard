@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
 class VTD_Tickets {
 
 	public static function init() {
-		add_action( 'init', array( __CLASS__, 'process_form' ), 30 );
+		add_action( 'template_redirect', array( __CLASS__, 'process_form' ), 20 );
 	}
 
 	public static function statuses() {
@@ -228,6 +228,7 @@ class VTD_Tickets {
 		}
 
 		do_action( 'vtd_ticket_created', $ticket_id, $user_id );
+		self::maybe_send_sms( $ticket_id, 'created' );
 		return $ticket_id;
 	}
 
@@ -266,6 +267,7 @@ class VTD_Tickets {
 		$wpdb->update( VTD_DB::tickets(), array( 'status' => $status, 'updated_at' => current_time( 'mysql' ) ), array( 'ticket_id' => $ticket_id ), array( '%s', '%s' ), array( '%d' ) );
 
 		do_action( 'vtd_ticket_replied', $ticket_id, $reply_id, (int) $ticket->user_id, $is_staff );
+		self::maybe_send_sms( $ticket_id, 'replied' );
 		return $reply_id;
 	}
 
@@ -277,6 +279,7 @@ class VTD_Tickets {
 		global $wpdb;
 		$wpdb->update( VTD_DB::tickets(), array( 'status' => 'closed', 'updated_at' => current_time( 'mysql' ) ), array( 'ticket_id' => $ticket_id ), array( '%s', '%s' ), array( '%d' ) );
 		do_action( 'vtd_ticket_closed', $ticket_id, $user_id );
+		self::maybe_send_sms( $ticket_id, 'closed' );
 		return true;
 	}
 
@@ -363,6 +366,38 @@ class VTD_Tickets {
 			$ticket_id = (int) ( $_POST['ticket_id'] ?? 0 );
 			$data      = array( 'attachments' => self::upload_files( 'ticket_files' ) );
 			$result    = self::reply( $user_id, $ticket_id, wp_unslash( $_POST['content'] ?? '' ), $data );
+			if ( ! is_wp_error( $result ) ) {
+				wp_safe_redirect( vtd_panel_url( array( 'vtd' => 'ticket', 'ticket' => $ticket_id ) ) );
+				exit;
+			}
+		}
+
+		if ( 'close' === $action && VTD_Options::get( 'ticket_cancel_enabled', 1 ) ) {
+			$ticket_id = (int) ( $_POST['ticket_id'] ?? 0 );
+			$result    = self::close( $user_id, $ticket_id );
+			if ( ! is_wp_error( $result ) ) {
+				wp_safe_redirect( vtd_panel_url( array( 'vtd' => 'ticket', 'ticket' => $ticket_id ) ) );
+				exit;
+			}
+		}
+
+		if ( 'cancel' === $action && VTD_Options::get( 'ticket_cancel_enabled', 1 ) ) {
+			$ticket_id = (int) ( $_POST['ticket_id'] ?? 0 );
+			$ticket    = self::get( $ticket_id );
+			if ( self::can_view( $user_id, $ticket ) && 'open' === $ticket->status ) {
+				global $wpdb;
+				$wpdb->update( VTD_DB::tickets(), array( 'status' => 'closed', 'updated_at' => current_time( 'mysql' ) ), array( 'ticket_id' => $ticket_id ), array( '%s', '%s' ), array( '%d' ) );
+				do_action( 'vtd_ticket_closed', $ticket_id, $user_id );
+				wp_safe_redirect( vtd_panel_url( array( 'vtd' => 'tickets' ) ) );
+				exit;
+			}
+		}
+
+		if ( 'rate' === $action && VTD_Options::get( 'ticket_rating', 1 ) ) {
+			$ticket_id = (int) ( $_POST['ticket_id'] ?? 0 );
+			$score     = max( 1, min( 5, (int) ( $_POST['score'] ?? 0 ) ) );
+			$feedback  = sanitize_textarea_field( wp_unslash( $_POST['feedback'] ?? '' ) );
+			$result    = self::rate( $user_id, $ticket_id, $score, $feedback );
 			if ( ! is_wp_error( $result ) ) {
 				wp_safe_redirect( vtd_panel_url( array( 'vtd' => 'ticket', 'ticket' => $ticket_id ) ) );
 				exit;
@@ -460,11 +495,20 @@ class VTD_Tickets {
 	}
 
 	public static function render_new() {
+		$departments = self::departments();
+		$dept_toggle = VTD_Options::get( 'ticket_departments_toggle', 1 );
+		if ( ! $dept_toggle ) {
+			$departments = array();
+		}
 		return VTD_Templates::module(
 			'new-ticket',
 			array(
-				'departments' => self::departments(),
+				'departments' => $departments,
 				'priorities'  => self::priorities(),
+				'faq_enabled' => VTD_Options::get( 'ticket_faq_enabled', 1 ),
+				'faq_content' => VTD_Options::get( 'ticket_faq_content', '' ),
+				'cancel_enabled' => VTD_Options::get( 'ticket_cancel_enabled', 1 ),
+				'rating_enabled' => VTD_Options::get( 'ticket_rating', 1 ),
 			)
 		);
 	}
@@ -492,8 +536,41 @@ class VTD_Tickets {
 				'is_staff'  => vtd_is_staff( $user_id ),
 				'statuses'  => self::statuses(),
 				'priorities' => self::priorities(),
+				'cancel_enabled' => VTD_Options::get( 'ticket_cancel_enabled', 1 ),
+				'rating_enabled' => VTD_Options::get( 'ticket_rating', 1 ),
 			)
 		);
+	}
+
+	public static function maybe_send_sms( $ticket_id, $event ) {
+		if ( ! VTD_Options::get( 'ticket_sms_notify', 0 ) ) {
+			return;
+		}
+		$events = VTD_Options::get( 'ticket_sms_events', array() );
+		if ( ! in_array( $event, $events, true ) ) {
+			return;
+		}
+		$ticket = self::get( $ticket_id );
+		if ( ! $ticket ) {
+			return;
+		}
+		$user = get_userdata( (int) $ticket->user_id );
+		if ( ! $user ) {
+			return;
+		}
+		$phone = get_user_meta( (int) $ticket->user_id, 'billing_phone', true );
+		if ( ! $phone ) {
+			return;
+		}
+		$messages = array(
+			'created' => 'تیکت جدید شما با شماره ' . $ticket_id . ' ثبت شد.',
+			'replied' => 'پاسخ جدیدی برای تیکت شماره ' . $ticket_id . ' ثبت شد.',
+			'closed'  => 'تیکت شماره ' . $ticket_id . ' بسته شد.',
+		);
+		$msg = $messages[ $event ] ?? '';
+		if ( $msg ) {
+			VTD_SMS::send( $phone, $msg );
+		}
 	}
 
 	public static function render_staff() {

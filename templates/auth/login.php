@@ -79,7 +79,9 @@ $vtd_digits_ready = $vtd_digits && $vtd_digits_tag && shortcode_exists( $vtd_dig
 				</label>
 				<div class="vtd-form-row">
 					<label class="vtd-check"><input type="checkbox" name="remember" value="1"> <?php esc_html_e( 'Remember me', 'vetra-dashboard' ); ?></label>
-					<a class="vtd-link" href="<?php echo esc_url( VTD_Router::reset_url() ); ?>"><?php esc_html_e( 'Forgot password?', 'vetra-dashboard' ); ?></a>
+					<?php if ( ! empty( $vtd_settings['reset_password_visible'] ) ) : ?>
+				<a class="vtd-link" href="<?php echo esc_url( VTD_Router::reset_url() ); ?>"><?php esc_html_e( 'Forgot password?', 'vetra-dashboard' ); ?></a>
+				<?php endif; ?>
 				</div>
 				<button type="submit" class="vtd-btn vtd-btn-primary vtd-btn-block"><?php esc_html_e( 'Sign in', 'vetra-dashboard' ); ?></button>
 			</form>

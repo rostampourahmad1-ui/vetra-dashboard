@@ -106,12 +106,14 @@ class VTD_Settings {
 		return array(
 			'general'   => __( 'General', 'vetra-dashboard' ),
 			'design'    => __( 'Design', 'vetra-dashboard' ),
+			'dashboard' => __( 'Dashboard', 'vetra-dashboard' ),
 			'auth'      => __( 'Login & Register', 'vetra-dashboard' ),
 			'profile'   => __( 'Profile fields', 'vetra-dashboard' ),
 			'tickets'   => __( 'Tickets', 'vetra-dashboard' ),
 			'modules'   => __( 'Modules', 'vetra-dashboard' ),
 			'sms'       => __( 'SMS', 'vetra-dashboard' ),
 			'email'     => __( 'Email', 'vetra-dashboard' ),
+			'footer'    => __( 'Footer & Social', 'vetra-dashboard' ),
 			'advanced'  => __( 'Advanced', 'vetra-dashboard' ),
 		);
 	}
@@ -162,6 +164,23 @@ class VTD_Settings {
 				),
 				'panel_fullwidth' => array( 'label' => __( 'Full-width panel (no theme header/footer)', 'vetra-dashboard' ), 'type' => 'switch' ),
 			),
+			'dashboard' => array(
+				'dashboard_welcome' => array( 'label' => 'نمایش پیام خوش‌آمدگویی', 'type' => 'switch' ),
+				'dashboard_show_stats' => array( 'label' => 'نمایش آمار کلی', 'type' => 'switch' ),
+				'dashboard_widgets' => array( 'label' => 'ابزارک‌های داشبورد (نمایش/عدم نمایش)', 'type' => 'widgets_toggle' ),
+				'dashboard_layout' => array(
+					'label'   => 'چیدمان داشبورد',
+					'type'    => 'select',
+					'options' => array(
+						'default' => 'پیش‌فرض',
+						'compact' => 'فشرده',
+						'grid'    => 'شبکه‌ای',
+					),
+				),
+				'dashboard_shortcuts' => array( 'label' => __( 'Dashboard shortcuts', 'vetra-dashboard' ), 'type' => 'shortcuts' ),
+				'dashboard_menu_custom' => array( 'label' => 'آیتم‌های سفارشی منوی داشبورد', 'type' => 'panel_menu_builder' ),
+				'avatar_menu_items' => array( 'label' => 'آیتم‌های منوی آواتار', 'type' => 'avatar_menu_builder' ),
+			),
 			'auth'     => array(
 				'register_enabled'    => array( 'label' => __( 'Enable registration', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'email_login'         => array( 'label' => __( 'Email login', 'vetra-dashboard' ), 'type' => 'switch' ),
@@ -172,6 +191,7 @@ class VTD_Settings {
 				'digits_login_page'   => array( 'label' => 'برگه جایگزین ورود Digits', 'type' => 'page' ),
 				'password_login'      => array( 'label' => __( 'Password login', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'login_modal'         => array( 'label' => __( 'Login modal in theme', 'vetra-dashboard' ), 'type' => 'switch' ),
+				'reset_password_visible' => array( 'label' => 'نمایش گزینه فراموشی رمز عبور', 'type' => 'switch' ),
 				'email_verify'        => array( 'label' => __( 'Verify email on signup', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'phone_verify'        => array( 'label' => __( 'Verify phone on signup', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'register_first_last' => array( 'label' => __( 'Ask first/last name', 'vetra-dashboard' ), 'type' => 'switch' ),
@@ -189,6 +209,8 @@ class VTD_Settings {
 			'profile'  => array(
 				'profile_avatar'        => array( 'label' => __( 'Avatar upload', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'profile_edit'          => array( 'label' => __( 'Allow profile editing', 'vetra-dashboard' ), 'type' => 'switch' ),
+				'profile_readonly_mode' => array( 'label' => 'اطلاعات کاربری فقط خواندنی (تغییر با درخواست و تأیید مدیر)', 'type' => 'switch' ),
+				'profile_change_request' => array( 'label' => 'سیستم درخواست تغییر اطلاعات (با آپلود مدرک)', 'type' => 'switch' ),
 				'profile_change_pass'   => array( 'label' => __( 'Allow password change', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'profile_confirm_email' => array( 'label' => __( 'Email confirmation', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'profile_confirm_phone' => array( 'label' => __( 'Phone confirmation', 'vetra-dashboard' ), 'type' => 'switch' ),
@@ -199,6 +221,13 @@ class VTD_Settings {
 				'ticket_enabled'     => array( 'label' => __( 'Enable tickets', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'ticket_attachments' => array( 'label' => __( 'Allow attachments', 'vetra-dashboard' ), 'type' => 'switch' ),
 				'ticket_rating'      => array( 'label' => __( 'Allow rating', 'vetra-dashboard' ), 'type' => 'switch' ),
+				'ticket_cancel_enabled' => array( 'label' => 'دکمه بستن/لغو تیکت', 'type' => 'switch' ),
+				'ticket_faq_enabled' => array( 'label' => 'نمایش سوالات متداول قبل از ثبت تیکت', 'type' => 'switch' ),
+				'ticket_faq_content' => array( 'label' => 'محتوای سوالات متداول و آموزش', 'type' => 'editor' ),
+				'ticket_sms_notify'  => array( 'label' => 'ارسال پیامک اعلان تیکت', 'type' => 'switch' ),
+				'ticket_sms_events'  => array( 'label' => 'رویدادهای اعلان پیامکی', 'type' => 'multiselect', 'options' => array( 'created' => 'ایجاد تیکت', 'replied' => 'پاسخ تیکت', 'closed' => 'بسته شدن تیکت' ) ),
+				'ticket_departments_toggle' => array( 'label' => 'نمایش/عدم نمایش دپارتمان‌ها در تنظیمات تیکت', 'type' => 'switch' ),
+				'ticket_staff_assignment' => array( 'label' => 'تخصیص پشتیبان به دپارتمان‌ها', 'type' => 'staff_assignment', 'options' => $roles ),
 				'ticket_max_open'    => array( 'label' => __( 'Max open tickets', 'vetra-dashboard' ), 'type' => 'number' ),
 				'ticket_auto_reply'  => array( 'label' => __( 'Automatic reply', 'vetra-dashboard' ), 'type' => 'textarea' ),
 				'ticket_staff_roles' => array( 'label' => __( 'Staff roles', 'vetra-dashboard' ), 'type' => 'multiselect', 'options' => $roles ),
@@ -243,6 +272,11 @@ class VTD_Settings {
 				'email_template_card_status' => array( 'label' => 'طراحی ایمیل وضعیت کارت بانکی', 'type' => 'editor' ),
 				'email_template_withdrawal_status' => array( 'label' => 'طراحی ایمیل وضعیت برداشت', 'type' => 'editor' ),
 				'email_footer'     => array( 'label' => __( 'Email footer', 'vetra-dashboard' ), 'type' => 'editor' ),
+			),
+			'footer'   => array(
+				'copyright_enabled' => array( 'label' => 'نمایش کپی‌رایت', 'type' => 'switch' ),
+				'copyright_text'    => array( 'label' => 'متن کپی‌رایت', 'type' => 'textarea' ),
+				'social_links'      => array( 'label' => 'شبکه‌های اجتماعی', 'type' => 'social_links' ),
 			),
 			'advanced' => array(
 				'delete_data_on_uninstall' => array( 'label' => __( 'Delete all data on uninstall', 'vetra-dashboard' ), 'type' => 'switch' ),
@@ -419,6 +453,64 @@ class VTD_Settings {
 			case 'avatar_menu_builder':
 				self::menu_builder( $name, (array) $value, 'avatar' );
 				break;
+			case 'widgets_toggle':
+				$widgets = array(
+					'open_tickets'         => 'تیکت‌های باز',
+					'unread_notifications' => 'اعلان‌های خوانده‌نشده',
+					'wallet_balance'       => 'موجودی کیف پول',
+					'total_tickets'        => 'کل تیکت‌ها',
+					'quick_access'         => 'دسترسی سریع',
+					'account_summary'      => 'خلاصه حساب',
+				);
+				$current_w = is_array( $value ) ? wp_list_pluck( $value, 'enabled', 'slug' ) : array();
+				echo '<fieldset class="vtd-menu-toggle">';
+				foreach ( $widgets as $wslug => $wlabel ) {
+					$wenabled = isset( $current_w[ $wslug ] ) ? (bool) $current_w[ $wslug ] : true;
+					echo '<label><input type="checkbox" name="' . esc_attr( $name . '[' . $wslug . ']' ) . '" value="1" ' . checked( $wenabled, true, false ) . '> ' . esc_html( $wlabel ) . '</label>';
+				}
+				echo '</fieldset>';
+				break;
+			case 'social_links':
+				$social_rows = array_values( (array) $value );
+				echo '<div class="vtd-repeater" data-repeater="social_links" data-repeater-name="social_links">';
+				echo '<div class="vtd-repeater-rows">';
+				foreach ( $social_rows as $i => $row ) {
+					$row = wp_parse_args( (array) $row, array( 'platform' => '', 'label' => '', 'url' => '', 'icon' => '', 'color' => '', 'enabled' => 1 ) );
+					echo '<div class="vtd-repeater-row vtd-social-row">';
+					echo '<select name="' . esc_attr( $name . '[' . $i . '][platform]' ) . '" class="vtd-social-platform">';
+						$platforms = array( 'telegram' => 'تلگرام', 'instagram' => 'اینستاگرام', 'whatsapp' => 'واتساپ', 'twitter' => 'توییتر', 'facebook' => 'فیسبوک', 'linkedin' => 'لینکدین', 'youtube' => 'یوتیوب', 'custom' => 'سایر' );
+						foreach ( $platforms as $pk => $pl ) {
+							echo '<option value="' . esc_attr( $pk ) . '" ' . selected( $row['platform'], $pk, false ) . '>' . esc_html( $pl ) . '</option>';
+						}
+					echo '</select>';
+					echo '<input type="text" name="' . esc_attr( $name . '[' . $i . '][label]' ) . '" value="' . esc_attr( $row['label'] ) . '" placeholder="عنوان">';
+					echo '<input type="url" name="' . esc_attr( $name . '[' . $i . '][url]' ) . '" value="' . esc_attr( $row['url'] ) . '" placeholder="https://">';
+					echo '<input type="text" name="' . esc_attr( $name . '[' . $i . '][color]' ) . '" value="' . esc_attr( $row['color'] ) . '" class="vtd-color" placeholder="رنگ">';
+					echo '<label><input type="checkbox" name="' . esc_attr( $name . '[' . $i . '][enabled]' ) . '" value="1" ' . checked( ! empty( $row['enabled'] ), true, false ) . '> نمایش</label>';
+					echo '<button type="button" class="button vtd-repeater-remove">&times;</button>';
+					echo '</div>';
+				}
+				echo '</div>';
+				echo '<button type="button" class="button vtd-repeater-add">افزودن شبکه اجتماعی</button>';
+				echo '</div>';
+				break;
+			case 'staff_assignment':
+				$depts = VTD_Tickets::departments();
+				$assigned = (array) $value;
+				$users = get_users( array( 'role__in' => $field['options'] ?? array( 'administrator' ) ) );
+				echo '<div class="vtd-staff-assignment">';
+				foreach ( $depts as $dept ) {
+					$dept_id = 'dept_' . $dept->id;
+					$selected = $assigned[ $dept_id ] ?? array();
+					echo '<div class="vtd-staff-assign-row"><strong>' . esc_html( $dept->name ) . '</strong>';
+					echo '<select name="' . esc_attr( $name . '[' . $dept_id . '][]' ) . '" multiple style="min-width:200px;height:auto">';
+					foreach ( $users as $user ) {
+						echo '<option value="' . esc_attr( $user->ID ) . '" ' . ( in_array( (string) $user->ID, array_map( 'strval', (array) $selected ), true ) ? 'selected' : '' ) . '>' . esc_html( $user->display_name ) . '</option>';
+					}
+					echo '</select></div>';
+				}
+				echo '</div>';
+				break;
 			default:
 				printf( '<input type="text" id="%1$s" name="%2$s" value="%3$s" class="regular-text">', esc_attr( $id ), esc_attr( $name ), esc_attr( $value ) );
 				if ( 'digits_shortcode' === $key ) {
@@ -593,6 +685,10 @@ class VTD_Settings {
 			'notifications_enabled', 'polls_enabled', 'attachments_enabled', 'banking_enabled', 'wallet_enabled', 'comments_enabled',
 			'sms_enabled', 'sms_log', 'email_on_ticket', 'email_on_signup', 'delete_data_on_uninstall',
 			'panel_fullwidth',
+				'dashboard_welcome', 'dashboard_show_stats',
+				'copyright_enabled', 'ticket_cancel_enabled', 'ticket_faq_enabled',
+				'ticket_sms_notify', 'ticket_departments_toggle',
+				'reset_password_visible', 'profile_readonly_mode', 'profile_change_request',
 		);
 
 		foreach ( $defaults as $key => $default ) {
@@ -698,6 +794,45 @@ class VTD_Settings {
 					break;
 				case 'avatar_menu_items':
 					$clean[ $key ] = self::sanitize_menu_rows( $value, 'avatar' );
+					break;
+				case 'copyright_text':
+				case 'ticket_faq_content':
+					$clean[ $key ] = wp_kses_post( $value );
+					break;
+				case 'dashboard_widgets':
+					$clean[ $key ] = array();
+					$widget_slugs = array( 'open_tickets', 'unread_notifications', 'wallet_balance', 'total_tickets', 'quick_access', 'account_summary' );
+					foreach ( $widget_slugs as $wslug ) {
+						$clean[ $key ][] = array(
+							'slug'    => $wslug,
+							'enabled' => ! empty( $value[ $wslug ] ) ? 1 : 0,
+						);
+					}
+					break;
+				case 'social_links':
+					$clean[ $key ] = array();
+					foreach ( (array) $value as $row ) {
+						if ( empty( $row['url'] ) ) {
+							continue;
+						}
+						$clean[ $key ][] = array(
+							'platform' => sanitize_key( $row['platform'] ?? 'custom' ),
+							'label'    => sanitize_text_field( $row['label'] ?? '' ),
+							'url'      => esc_url_raw( $row['url'] ?? '' ),
+							'icon'     => sanitize_key( $row['icon'] ?? 'link' ),
+							'color'    => sanitize_hex_color( $row['color'] ?? '' ) ?: '',
+							'enabled'  => ! empty( $row['enabled'] ) ? 1 : 0,
+						);
+					}
+					break;
+				case 'ticket_sms_events':
+					$clean[ $key ] = array_values( array_map( 'sanitize_key', (array) $value ) );
+					break;
+				case 'ticket_staff_assignment':
+					$clean[ $key ] = array();
+					foreach ( (array) $value as $dept_id => $user_ids ) {
+						$clean[ $key ][ sanitize_key( $dept_id ) ] = array_values( array_map( 'absint', (array) $user_ids ) );
+					}
 					break;
 				default:
 					$clean[ $key ] = is_scalar( $value ) ? sanitize_text_field( $value ) : $value;

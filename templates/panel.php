@@ -47,7 +47,11 @@ $vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticke
 			<img class="vtd-avatar" src="<?php echo esc_url( VTD_Profile::avatar_url( $vtd_user_id ) ); ?>" alt="">
 			<div class="vtd-sidebar-user-info">
 				<strong><?php echo esc_html( vtd_current_user_name( $vtd_user_id ) ); ?></strong>
-				<span><?php echo esc_html( get_userdata( $vtd_user_id )->user_login ); ?></span>
+				<?php
+					$vtd_user_obj = get_userdata( $vtd_user_id );
+					$vtd_user_role = $vtd_user_obj && $vtd_user_obj->roles ? translate_user_role( ucfirst( $vtd_user_obj->roles[0] ) ) : '';
+				?>
+				<span><?php echo esc_html( $vtd_user_role ); ?></span>
 			</div>
 		</div>
 
@@ -146,5 +150,34 @@ $vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticke
 			}
 			?>
 		</div>
+
+			<footer class="vtd-panel-footer">
+				<?php
+					$vtd_social_links = (array) ( $vtd_settings['social_links'] ?? array() );
+					if ( ! empty( $vtd_social_links ) ) :
+				?>
+				<div class="vtd-social-links">
+					<?php foreach ( $vtd_social_links as $vtd_social ) : ?>
+						<?php if ( empty( $vtd_social['enabled'] ) || empty( $vtd_social['url'] ) ) continue; ?>
+						<a href="<?php echo esc_url( $vtd_social['url'] ); ?>" target="_blank" rel="noopener noreferrer" class="vtd-social-link vtd-social-<?php echo esc_attr( $vtd_social['platform'] ?? 'custom' ); ?>"<?php echo ! empty( $vtd_social['color'] ) ? ' style="color:' . esc_attr( $vtd_social['color'] ) . '"' : ''; ?>>
+							<?php echo vtd_icon( $vtd_social['icon'] ?? $vtd_social['platform'] ?? 'link' ); // phpcs:ignore ?>
+							<?php if ( ! empty( $vtd_social['label'] ) ) : ?><span><?php echo esc_html( $vtd_social['label'] ); ?></span><?php endif; ?>
+						</a>
+					<?php endforeach; ?>
+				</div>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $vtd_settings['copyright_enabled'] ) ) : ?>
+				<div class="vtd-copyright">
+					<?php
+						$vtd_copyright = $vtd_settings['copyright_text'] ?? '';
+						if ( empty( $vtd_copyright ) ) {
+							$vtd_copyright = '© ' . date_i18n( 'Y' ) . ' ' . esc_html( $vtd_brand ) . '. تمام حقوق محفوظ است.';
+						}
+						echo wp_kses_post( $vtd_copyright );
+					?>
+				</div>
+				<?php endif; ?>
+			</footer>
 	</main>
 </div>

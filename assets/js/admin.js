@@ -107,3 +107,36 @@
 		});
 	});
 })(jQuery);
+
+		// Social links repeater
+		$(document).on("click", ".vtd-repeater[data-repeater='social_links'] .vtd-repeater-add", function () {
+			var repeater = $(this).closest(".vtd-repeater");
+			var rows = repeater.find(".vtd-repeater-rows");
+			var index = 0;
+			rows.find(".vtd-repeater-row:not(.vtd-repeater-template)").each(function () {
+				var firstName = $(this).find("[name]").first().attr("name") || "";
+				var match = firstName.match(/\[(\d+)\]\[/);
+				if (match) { index = Math.max(index, parseInt(match[1], 10) + 1); }
+			});
+			var name = repeater.data("repeater-name") || "social_links";
+			var newRow = $('<div class="vtd-repeater-row vtd-social-row">' +
+				'<select name="vetra_settings[' + name + '][' + index + '][platform]" class="vtd-social-platform">' +
+				'<option value="telegram">تلگرام</option>' +
+				'<option value="instagram">اینستاگرام</option>' +
+				'<option value="whatsapp">واتساپ</option>' +
+				'<option value="twitter">توییتر</option>' +
+				'<option value="facebook">فیسبوک</option>' +
+				'<option value="linkedin">لینکدین</option>' +
+				'<option value="youtube">یوتیوب</option>' +
+				'<option value="custom">سایر</option>' +
+				'</select>' +
+				'<input type="text" name="vetra_settings[' + name + '][' + index + '][label]" placeholder="عنوان">' +
+				'<input type="url" name="vetra_settings[' + name + '][' + index + '][url]" placeholder="https://">' +
+				'<input type="text" name="vetra_settings[' + name + '][' + index + '][color]" class="vtd-color" placeholder="رنگ">' +
+				'<label><input type="checkbox" name="vetra_settings[' + name + '][' + index + '][enabled]" value="1" checked> نمایش</label>' +
+				'<button type="button" class="button vtd-repeater-remove">&times;</button></div>');
+			rows.append(newRow);
+			if ($.fn.wpColorPicker) {
+				newRow.find(".vtd-color").wpColorPicker();
+			}
+		});

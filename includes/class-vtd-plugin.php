@@ -40,6 +40,10 @@ final class VTD_Plugin {
 		VTD_Banking::init();
 		VTD_Wallet::init();
 		VTD_Comments::init();
+		VTD_Changes::init();
+
+		add_action( 'profile_update', array( 'VTD_Changes', 'sync_display_name' ) );
+		add_action( 'user_register', array( 'VTD_Changes', 'sync_display_name' ) );
 
 		if ( is_admin() ) {
 			VTD_Admin::init();

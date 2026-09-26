@@ -127,6 +127,94 @@ class VTD_Options {
 			'email_on_ticket'     => 1,
 			'email_on_signup'     => 1,
 			'delete_data_on_uninstall' => 0,
+
+			/* Modules visibility ------------------------------------------------ */
+			'dashboard_enabled'   => 1,
+			'profile_enabled'     => 1,
+			'admin_modules'       => array(
+				array( 'slug' => 'vetra-users', 'enabled' => 1 ),
+				array( 'slug' => 'vetra-sms-log', 'enabled' => 1 ),
+				array( 'slug' => 'vetra-withdrawals', 'enabled' => 1 ),
+				array( 'slug' => 'vetra-wallet', 'enabled' => 1 ),
+				array( 'slug' => 'vetra-cards', 'enabled' => 1 ),
+				array( 'slug' => 'vetra-attachments', 'enabled' => 1 ),
+				array( 'slug' => 'vetra-polls', 'enabled' => 1 ),
+				array( 'slug' => 'vetra-notifications', 'enabled' => 1 ),
+				array( 'slug' => 'vetra-departments', 'enabled' => 1 ),
+				array( 'slug' => 'vetra-tickets', 'enabled' => 1 ),
+				array( 'slug' => 'vetra-changes', 'enabled' => 1 ),
+			),
+
+			/* Dashboard layout -------------------------------------------------- */
+			'dashboard_layout'    => 'comfortable',
+			'dashboard_columns'   => 4,
+			'dashboard_gradient'  => 1,
+			'dashboard_hero'      => 1,
+			'dashboard_cards'     => array(
+				array( 'metric' => 'open_tickets', 'label' => 'تیکت‌های باز', 'icon' => 'ticket', 'tone' => 'primary', 'enabled' => 1 ),
+				array( 'metric' => 'unread_notifications', 'label' => 'اعلان‌های خوانده‌نشده', 'icon' => 'bell', 'tone' => 'accent', 'enabled' => 1 ),
+				array( 'metric' => 'wallet_balance', 'label' => 'موجودی کیف پول', 'icon' => 'wallet', 'tone' => 'success', 'enabled' => 1 ),
+				array( 'metric' => 'total_tickets', 'label' => 'کل تیکت‌ها', 'icon' => 'ticket', 'tone' => 'muted', 'enabled' => 1 ),
+			),
+			'dashboard_custom_cards' => array(),
+			'dashboard_blocks'    => array(
+				array( 'slug' => 'shortcuts', 'enabled' => 1 ),
+				array( 'slug' => 'summary', 'enabled' => 1 ),
+			),
+
+			/* Footer: social links + copyright ---------------------------------- */
+			'social_enabled'      => 1,
+			'social_color_mode'   => 'brand',
+			'social_icons'        => array(
+				array( 'network' => 'instagram', 'label' => 'اینستاگرام', 'url' => '', 'color' => '#e1306c', 'enabled' => 1 ),
+				array( 'network' => 'telegram', 'label' => 'تلگرام', 'url' => '', 'color' => '#229ed9', 'enabled' => 1 ),
+				array( 'network' => 'whatsapp', 'label' => 'واتس‌اپ', 'url' => '', 'color' => '#25d366', 'enabled' => 1 ),
+				array( 'network' => 'linkedin', 'label' => 'لینکدین', 'url' => '', 'color' => '#0a66c2', 'enabled' => 0 ),
+				array( 'network' => 'youtube', 'label' => 'یوتیوب', 'url' => '', 'color' => '#ff0000', 'enabled' => 0 ),
+				array( 'network' => 'x', 'label' => 'ایکس', 'url' => '', 'color' => '#111827', 'enabled' => 0 ),
+			),
+			'footer_copyright_enabled' => 1,
+			'footer_copyright'    => '© {year} Vetra — تمامی حقوق برای Vetra محفوظ است.',
+			'footer_extra'        => '',
+
+			/* Ticket extras ------------------------------------------------------ */
+			'ticket_departments_visible' => 1,
+			'ticket_hidden_departments'  => array(),
+			'ticket_allow_close'  => 1,
+			'ticket_allow_cancel' => 1,
+			'ticket_faq_enabled'  => 1,
+			'ticket_faq_gate'     => 1,
+			'ticket_faq_intro'    => 'قبل از ثبت تیکت، لطفاً پرسش‌های متداول و آموزش‌های زیر را مطالعه کنید.',
+			'ticket_faq_items'    => array(
+				array( 'question' => 'چگونه رمز عبور خود را تغییر دهم؟', 'answer' => 'از بخش پروفایل و کارت «تغییر گذرواژه» می‌توانید رمز خود را تغییر دهید.', 'url' => '' ),
+				array( 'question' => 'چطور مدارک هویتی را ارسال کنم؟', 'answer' => 'در بخش پروفایل، درخواست تغییر اطلاعات را ثبت کنید و مدارک را پیوست نمایید.', 'url' => '' ),
+			),
+			'ticket_faq_links'    => array(
+				array( 'label' => 'راهنمای شروع به کار', 'url' => '' ),
+			),
+			'ticket_sms_notify_user'  => 0,
+			'ticket_sms_notify_staff' => 0,
+			'ticket_sms_admin_phone'  => '',
+			'ticket_sms_pattern_created' => '',
+			'ticket_sms_pattern_reply'   => '',
+			'ticket_department_staff' => array(),
+			'ticket_staff_by_role'    => 1,
+			'ticket_department_assign' => array(),
+
+			/* Profile change-request workflow ------------------------------------ */
+			'profile_readonly'         => 0,
+			'profile_change_requests'  => 1,
+			'profile_change_require_docs' => 1,
+			'profile_change_fields'    => array( 'first_name', 'last_name', 'national_code', 'phone', 'email', 'birthday', 'gender', 'about' ),
+			'profile_national_code_field' => 'national_code',
+			'profile_sms_on_change'    => 0,
+
+			/* Auth extras -------------------------------------------------------- */
+			'forgot_password'     => 1,
+			'username_is_national_code' => 0,
+			'register_national_code'    => 1,
+			'display_name_format' => 'full_name',
+			'national_code_meta'  => 'national_code',
 		);
 
 		return apply_filters( 'vtd_default_settings', $defaults );

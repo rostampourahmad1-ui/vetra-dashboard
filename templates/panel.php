@@ -47,7 +47,7 @@ $vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticke
 			<img class="vtd-avatar" src="<?php echo esc_url( VTD_Profile::avatar_url( $vtd_user_id ) ); ?>" alt="">
 			<div class="vtd-sidebar-user-info">
 				<strong><?php echo esc_html( vtd_current_user_name( $vtd_user_id ) ); ?></strong>
-				<span><?php echo esc_html( get_userdata( $vtd_user_id )->user_login ); ?></span>
+				<span><?php echo esc_html__( 'حساب کاربری', 'vetra-dashboard' ); ?></span>
 			</div>
 		</div>
 
@@ -146,5 +146,6 @@ $vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticke
 			}
 			?>
 		</div>
+		<?php echo VTD_Social::render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	</main>
 </div>

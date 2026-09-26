@@ -74,6 +74,10 @@ class VTD_DB {
 		return self::table( 'withdrawals' );
 	}
 
+	public static function change_requests() {
+		return self::table( 'change_requests' );
+	}
+
 	public static function sms_log() {
 		return self::table( 'sms_log' );
 	}
@@ -289,6 +293,27 @@ class VTD_DB {
 			created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
 			PRIMARY KEY  (id),
 			KEY phone (phone)
+		) $charset;";
+
+		$sql[] = "CREATE TABLE " . self::change_requests() . " (
+			request_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			user_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			field_key VARCHAR(100) NOT NULL DEFAULT '',
+			field_label VARCHAR(191) NULL,
+			current_value LONGTEXT NULL,
+			new_value LONGTEXT NULL,
+			docs LONGTEXT NULL,
+			status VARCHAR(20) NOT NULL DEFAULT 'pending',
+			stage VARCHAR(20) NOT NULL DEFAULT 'submitted',
+			admin_note TEXT NULL,
+			docs_request TEXT NULL,
+			reviewed_by BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			reviewed_at DATETIME NULL,
+			created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+			updated_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+			PRIMARY KEY  (request_id),
+			KEY user_id (user_id),
+			KEY status (status)
 		) $charset;";
 
 		return $sql;

@@ -77,6 +77,25 @@ class VTD_SMS {
 		return $result;
 	}
 
+	/**
+	 * Send a pre-approved pattern (template) SMS when the provider supports it.
+	 *
+	 * @return mixed Provider response or false when patterns are unavailable.
+	 */
+	public static function send_pattern( $phone, $pattern, $params = array(), $context = 'pattern' ) {
+		$phone   = vtd_sanitize_phone( $phone );
+		$pattern = (string) $pattern;
+		if ( '' === $phone || '' === $pattern || ! self::enabled() ) {
+			return false;
+		}
+		if ( 'ippanel' !== VTD_Options::get( 'sms_provider', 'ippanel' ) ) {
+			return false;
+		}
+		$result = self::provider()->send( $phone, '', array( 'pattern' => $pattern, 'params' => (array) $params ) );
+		self::log( $phone, 'Pattern ' . $pattern, $context, $result );
+		return $result;
+	}
+
 	public static function send_otp( $phone, $purpose = 'login' ) {
 		$phone = vtd_sanitize_phone( $phone );
 		if ( '' === $phone ) {

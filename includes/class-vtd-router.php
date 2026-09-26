@@ -46,12 +46,24 @@ class VTD_Router {
 
 	public static function add_rewrite() {
 		add_rewrite_rule( '^vtd-panel/([^/]+)/?$', 'index.php?pagename=vtd-panel&vtd=$matches[1]', 'top' );
+		add_rewrite_rule( '^vtd-panel/([^/]+)/([0-9]+)/?$', 'index.php?pagename=vtd-panel&vtd=$matches[1]&ticket=$matches[2]', 'top' );
 	}
 
 	public static function query_vars( $vars ) {
 		$vars[] = 'vtd';
 		$vars[] = 'vtd_action';
+		$vars[] = 'ticket';
+		$vars[] = 'ticket_status';
+		$vars[] = 'ticket_search';
+		$vars[] = 'tpage';
+		$vars[] = 'department';
+		$vars[] = 'vtd_msg';
 		return $vars;
+	}
+
+	/** Direct URL of a single support ticket. */
+	public static function ticket_url( $ticket_id ) {
+		return apply_filters( 'vtd_ticket_url', vtd_panel_url( array( 'vtd' => 'ticket', 'ticket' => (int) $ticket_id ) ), (int) $ticket_id );
 	}
 
 	public static function page_url( $key ) {

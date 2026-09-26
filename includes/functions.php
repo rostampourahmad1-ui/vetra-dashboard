@@ -51,6 +51,18 @@ function vtd_reset_url() {
 	return VTD_Router::reset_url();
 }
 
+function vtd_ticket_url( $ticket_id ) {
+	return VTD_Router::ticket_url( $ticket_id );
+}
+
+function vtd_module_enabled( $module ) {
+	return VTD_Modules::enabled( $module );
+}
+
+function vtd_module_section_enabled( $section ) {
+	return VTD_Modules::section_enabled( $section );
+}
+
 /** Register a dashboard area from another plugin or theme. */
 function vtd_register_panel_section( $slug, $args ) {
 	return VTD_Router::register_section( $slug, $args );

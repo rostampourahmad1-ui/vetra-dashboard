@@ -3,7 +3,7 @@
  * Plugin Name:       Vetra Dashboard
  * Plugin URI:        https://vetra.local/
  * Description:       A modern, fully-featured user dashboard and account panel for WordPress. Independent from WooCommerce. Includes tickets, notifications, polls, attachments, banking, wallet, SMS OTP auth and more.
- * Version:           1.3.0
+ * Version:           2.1.0
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Vetra
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'VTD_VERSION', '1.3.0' );
+define( 'VTD_VERSION', '2.1.0' );
 define( 'VTD_FILE', __FILE__ );
 define( 'VTD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'VTD_URL', plugin_dir_url( __FILE__ ) );
@@ -28,7 +28,7 @@ define( 'VTD_MODULES', VTD_PATH . 'modules/' );
 define( 'VTD_ADMIN', VTD_PATH . 'admin/' );
 define( 'VTD_TEMPLATES', VTD_PATH . 'templates/' );
 define( 'VTD_ASSETS', VTD_URL . 'assets/' );
-define( 'VTD_DB_VERSION', '1.0.0' );
+define( 'VTD_DB_VERSION', '1.1.0' );
 
 if ( ! defined( 'VTD_OPTION_KEY' ) ) {
 	define( 'VTD_OPTION_KEY', 'vetra_settings' );
@@ -36,6 +36,9 @@ if ( ! defined( 'VTD_OPTION_KEY' ) ) {
 
 require_once VTD_INCLUDES . 'functions.php';
 require_once VTD_INCLUDES . 'class-vtd-options.php';
+require_once VTD_INCLUDES . 'class-vtd-modules.php';
+require_once VTD_INCLUDES . 'class-vtd-social.php';
+require_once VTD_INCLUDES . 'class-vtd-changes.php';
 require_once VTD_INCLUDES . 'class-vtd-db.php';
 require_once VTD_INCLUDES . 'class-vtd-roles.php';
 require_once VTD_INCLUDES . 'class-vtd-install.php';

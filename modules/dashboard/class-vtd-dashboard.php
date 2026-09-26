@@ -100,6 +100,9 @@ class VTD_Dashboard {
 
 	public static function render() {
 		$user_id = get_current_user_id();
+		if ( ! VTD_Modules::enabled( 'dashboard' ) ) {
+			return '';
+		}
 		return VTD_Templates::module(
 			'dashboard',
 			array(

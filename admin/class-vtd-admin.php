@@ -14,6 +14,7 @@ class VTD_Admin {
 		add_action( 'admin_post_vtd_sms_test', array( __CLASS__, 'sms_test' ) );
 		add_action( 'admin_post_vtd_email_preview', array( __CLASS__, 'email_preview' ) );
 		add_action( 'admin_post_vtd_action', array( __CLASS__, 'handle_action' ) );
+		add_action( 'admin_post_vtd_change_action', array( __CLASS__, 'handle_change_action' ) );
 		add_filter( 'plugin_action_links_' . VTD_BASENAME, array( __CLASS__, 'plugin_links' ) );
 		VTD_Settings::init();
 	}
@@ -39,6 +40,7 @@ class VTD_Admin {
 			'vetra-dashboard'    => array( __( 'Overview', 'vetra-dashboard' ), 'page_dashboard' ),
 			'vetra-settings'     => array( __( 'Settings', 'vetra-dashboard' ), array( 'VTD_Settings', 'render' ) ),
 			'vetra-tickets'      => array( __( 'Tickets', 'vetra-dashboard' ), 'page_tickets' ),
+			'vetra-changes'      => array( 'درخواست تغییر اطلاعات', 'page_changes' ),
 			'vetra-departments'  => array( __( 'Departments', 'vetra-dashboard' ), 'page_departments' ),
 			'vetra-notifications' => array( __( 'Notifications', 'vetra-dashboard' ), 'page_notifications' ),
 			'vetra-polls'        => array( __( 'Polls', 'vetra-dashboard' ), 'page_polls' ),
@@ -51,13 +53,17 @@ class VTD_Admin {
 		);
 
 		foreach ( $pages as $slug => $data ) {
+			if ( ! VTD_Modules::admin_page_visible( $slug ) ) {
+				continue;
+			}
 			$callback = is_string( $data[1] ) ? array( __CLASS__, $data[1] ) : $data[1];
 			add_submenu_page( 'vetra-dashboard', $data[0], $data[0], 'manage_options', $slug, $callback );
 		}
 	}
 
 	protected static function guard() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( ! current_user_can( 'manage_options' ) || ( $page && ! VTD_Modules::admin_page_visible( $page ) ) ) {
 			wp_die( esc_html__( 'You do not have permission to access this page.', 'vetra-dashboard' ) );
 		}
 	}
@@ -87,6 +93,42 @@ class VTD_Admin {
 	public static function page_tickets() {
 		self::guard();
 		VTD_List_Tables::tickets();
+	}
+
+	public static function page_changes() {
+		self::guard();
+		VTD_List_Tables::changes();
+	}
+
+	public static function handle_change_action() {
+		if ( ! current_user_can( 'manage_options' ) || ! check_admin_referer( 'vtd_change_action' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'vetra-dashboard' ) );
+		}
+		$request_id = isset( $_POST['request_id'] ) ? absint( $_POST['request_id'] ) : 0;
+		$action     = isset( $_POST['change_action'] ) ? sanitize_key( wp_unslash( $_POST['change_action'] ) ) : '';
+		$note       = isset( $_POST['admin_note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['admin_note'] ) ) : '';
+		switch ( $action ) {
+			case 'approve':
+				$result = VTD_Changes::approve( $request_id, $note );
+				break;
+			case 'reject':
+				$result = VTD_Changes::reject( $request_id, $note );
+				break;
+			case 'request_docs':
+				$result = VTD_Changes::request_docs( $request_id, $note );
+				break;
+			case 'request_physical_docs':
+				$result = VTD_Changes::request_physical_docs( $request_id, $note );
+				break;
+			case 'physical_received':
+				$result = VTD_Changes::mark_physical_docs_received( $request_id );
+				break;
+			default:
+				$result = new WP_Error( 'vtd_change_action', 'عملیات درخواست معتبر نیست.' );
+		}
+		$notice = is_wp_error( $result ) ? $result->get_error_message() : 'عملیات با موفقیت انجام شد.';
+		wp_safe_redirect( add_query_arg( array( 'page' => 'vetra-changes', 'change_notice' => $notice ), admin_url( 'admin.php' ) ) );
+		exit;
 	}
 
 	public static function page_departments() {

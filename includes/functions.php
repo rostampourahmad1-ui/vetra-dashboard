@@ -76,7 +76,7 @@ function vtd_current_user_name( $user_id = 0 ) {
 	}
 	$name = trim( $user->first_name . ' ' . $user->last_name );
 	if ( '' === $name ) {
-		$name = $user->display_name;
+		$name = 'کاربر';
 	}
 	return $name;
 }

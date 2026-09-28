@@ -19,9 +19,9 @@ $vtd_settings     = VTD_Options::all();
 $vtd_avatar_menu   = VTD_Dashboard::avatar_menu_items( $vtd_user_id );
 $vtd_logo         = $vtd_settings['panel_logo'] ?? '';
 $vtd_brand        = $vtd_settings['brand_name'] ?? 'Vetra';
-$vtd_unread       = VTD_Notifications::unread_count( $vtd_user_id );
+$vtd_unread       = VTD_Modules::enabled( 'notifications' ) ? VTD_Notifications::unread_count( $vtd_user_id ) : 0;
 $vtd_ticket_count = VTD_Tickets::counts( $vtd_user_id );
-$vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticket_count['closed'] ?? 0 );
+$vtd_open_tickets = VTD_Modules::enabled( 'tickets' ) ? (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticket_count['closed'] ?? 0 ) : 0;
 ?>
 <div class="vtd-app" data-theme="<?php echo esc_attr( $vtd_settings['dark_mode'] ?? 'auto' ); ?>">
 	<div class="vtd-backdrop" data-vtd-drawer-close></div>
@@ -97,7 +97,7 @@ $vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticke
 				<button type="button" class="vtd-icon-btn" data-vtd-theme-toggle aria-label="<?php esc_attr_e( 'Theme', 'vetra-dashboard' ); ?>">
 					<?php echo vtd_icon( 'star' ); // phpcs:ignore ?>
 				</button>
-				<div class="vtd-notify" data-vtd-notify>
+				<?php if ( VTD_Modules::enabled( 'notifications' ) ) : ?><div class="vtd-notify" data-vtd-notify>
 					<button type="button" class="vtd-icon-btn" data-vtd-notify-toggle aria-label="<?php esc_attr_e( 'Notifications', 'vetra-dashboard' ); ?>">
 						<?php echo vtd_icon( 'bell' ); // phpcs:ignore ?>
 						<span class="vtd-dot" data-vtd-notify-count <?php echo $vtd_unread ? '' : 'hidden'; ?>><?php echo (int) $vtd_unread; ?></span>
@@ -111,7 +111,7 @@ $vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticke
 							<div class="vtd-notify-loading"><?php esc_html_e( 'Loading...', 'vetra-dashboard' ); ?></div>
 						</div>
 					</div>
-				</div>
+				</div><?php endif; ?>
 				<details class="vtd-user-menu" data-vtd-user-menu>
 					<summary class="vtd-user-menu-trigger" aria-label="منوی حساب کاربری">
 						<img src="<?php echo esc_url( VTD_Profile::avatar_url( $vtd_user_id ) ); ?>" alt="">
@@ -139,10 +139,12 @@ $vtd_open_tickets = (int) ( $vtd_ticket_count['all'] ?? 0 ) - (int) ( $vtd_ticke
 		<div class="vtd-content" id="vtd-content">
 			<?php
 			$vtd_callback = $vtd_all_sections[ $vtd_current ]['callback'] ?? null;
-			if ( is_callable( $vtd_callback ) ) {
+			if ( 'dashboard' === $vtd_current && ! VTD_Modules::enabled( 'dashboard' ) ) {
+				echo VTD_Templates::module( 'alert', array( 'message' => 'داشبورد در حال حاضر غیرفعال است.', 'type' => 'error' ) ); // phpcs:ignore WordPress.Security.EscapeOutput
+			} elseif ( is_callable( $vtd_callback ) ) {
 				echo call_user_func( $vtd_callback ); // phpcs:ignore WordPress.Security.EscapeOutput
 			} else {
-				echo VTD_Templates::module( 'dashboard', array( 'stats' => VTD_Dashboard::stats( $vtd_user_id ), 'shortcuts' => VTD_Dashboard::shortcuts(), 'banner' => array(), 'user_id' => $vtd_user_id ) ); // phpcs:ignore
+				echo VTD_Templates::module( 'alert', array( 'message' => 'هیچ بخشی برای نمایش فعال نیست؛ تنظیمات داشبورد را بررسی کنید.', 'type' => 'info' ) ); // phpcs:ignore WordPress.Security.EscapeOutput
 			}
 			?>
 		</div>

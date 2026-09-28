@@ -66,6 +66,13 @@ class VTD_Ajax {
 		return new WP_REST_Response( array_merge( array( 'success' => true, 'message' => $message ), $data ), 200 );
 	}
 
+	protected static function module_error( $module ) {
+		if ( VTD_Modules::enabled( $module ) ) {
+			return null;
+		}
+		return self::error( new WP_Error( 'vtd_module_disabled', 'این بخش در حال حاضر غیرفعال است.', array( 'status' => 403 ) ) );
+	}
+
 	public static function otp_send( $request ) {
 		$phone   = vtd_sanitize_phone( self::param( $request, 'phone' ) );
 		$purpose = sanitize_key( self::param( $request, 'purpose', 'login' ) );
@@ -104,10 +111,12 @@ class VTD_Ajax {
 	}
 
 	public static function notifications( $request ) {
+		if ( $error = self::module_error( 'notifications' ) ) { return $error; }
 		return self::ok( array( 'items' => VTD_Notifications::api_list( get_current_user_id() ) ) );
 	}
 
 	public static function notifications_read( $request ) {
+		if ( $error = self::module_error( 'notifications' ) ) { return $error; }
 		$id = (int) self::param( $request, 'id', 0 );
 		VTD_Notifications::mark_read( get_current_user_id(), $id );
 		return self::ok( array(), __( 'Done.', 'vetra-dashboard' ) );
@@ -155,6 +164,7 @@ class VTD_Ajax {
 	}
 
 	public static function ticket_create( $request ) {
+		if ( $error = self::module_error( 'tickets' ) ) { return $error; }
 		$result = VTD_Tickets::create( get_current_user_id(), $request->get_params() );
 		if ( is_wp_error( $result ) ) {
 			return self::error( $result );
@@ -163,6 +173,7 @@ class VTD_Ajax {
 	}
 
 	public static function ticket_reply( $request ) {
+		if ( $error = self::module_error( 'tickets' ) ) { return $error; }
 		$result = VTD_Tickets::reply( get_current_user_id(), (int) self::param( $request, 'ticket_id', 0 ), self::param( $request, 'content' ), $request->get_params() );
 		if ( is_wp_error( $result ) ) {
 			return self::error( $result );
@@ -171,6 +182,7 @@ class VTD_Ajax {
 	}
 
 	public static function ticket_close( $request ) {
+		if ( $error = self::module_error( 'tickets' ) ) { return $error; }
 		$result = VTD_Tickets::close( get_current_user_id(), (int) self::param( $request, 'ticket_id', 0 ) );
 		if ( is_wp_error( $result ) ) {
 			return self::error( $result );
@@ -179,6 +191,7 @@ class VTD_Ajax {
 	}
 
 	public static function ticket_rate( $request ) {
+		if ( $error = self::module_error( 'tickets' ) ) { return $error; }
 		$result = VTD_Tickets::rate( get_current_user_id(), (int) self::param( $request, 'ticket_id', 0 ), (int) self::param( $request, 'score', 0 ), self::param( $request, 'feedback' ) );
 		if ( is_wp_error( $result ) ) {
 			return self::error( $result );
@@ -187,6 +200,7 @@ class VTD_Ajax {
 	}
 
 	public static function ticket_star( $request ) {
+		if ( $error = self::module_error( 'tickets' ) ) { return $error; }
 		$result = VTD_Tickets::toggle_star( get_current_user_id(), (int) self::param( $request, 'ticket_id', 0 ) );
 		if ( is_wp_error( $result ) ) {
 			return self::error( $result );
@@ -195,6 +209,7 @@ class VTD_Ajax {
 	}
 
 	public static function poll_vote( $request ) {
+		if ( $error = self::module_error( 'polls' ) ) { return $error; }
 		$result = VTD_Polls::vote( get_current_user_id(), (int) self::param( $request, 'poll_id', 0 ), (array) self::param( $request, 'choices', array() ) );
 		if ( is_wp_error( $result ) ) {
 			return self::error( $result );
@@ -203,6 +218,7 @@ class VTD_Ajax {
 	}
 
 	public static function card_save( $request ) {
+		if ( $error = self::module_error( 'banking' ) ) { return $error; }
 		$result = VTD_Banking::save( get_current_user_id(), $request->get_params() );
 		if ( is_wp_error( $result ) ) {
 			return self::error( $result );
@@ -211,6 +227,7 @@ class VTD_Ajax {
 	}
 
 	public static function card_delete( $request ) {
+		if ( $error = self::module_error( 'banking' ) ) { return $error; }
 		$result = VTD_Banking::delete( get_current_user_id(), (int) self::param( $request, 'card_id', 0 ) );
 		if ( is_wp_error( $result ) ) {
 			return self::error( $result );
@@ -219,6 +236,7 @@ class VTD_Ajax {
 	}
 
 	public static function wallet_withdraw( $request ) {
+		if ( $error = self::module_error( 'wallet' ) ) { return $error; }
 		$result = VTD_Wallet::request_withdrawal( get_current_user_id(), (float) self::param( $request, 'amount', 0 ), (int) self::param( $request, 'card_id', 0 ), self::param( $request, 'note' ) );
 		if ( is_wp_error( $result ) ) {
 			return self::error( $result );
@@ -227,6 +245,7 @@ class VTD_Ajax {
 	}
 
 	public static function attachment_download( $request ) {
+		if ( $error = self::module_error( 'attachments' ) ) { return $error; }
 		$result = VTD_Attachments::authorize( get_current_user_id(), (int) self::param( $request, 'id', 0 ) );
 		if ( is_wp_error( $result ) ) {
 			return self::error( $result );

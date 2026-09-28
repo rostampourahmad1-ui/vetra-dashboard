@@ -101,6 +101,45 @@ class VTD_List_Tables {
 		echo '</div>';
 	}
 
+	public static function changes() {
+		$status = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : 'pending';
+		$result = VTD_Changes::query( array( 'status' => $status, 'per_page' => 50, 'paged' => 1 ) );
+		$items  = self::items( $result['items'] );
+		echo '<div class="wrap vtd-admin-wrap vtd-changes-admin"><h1>درخواست‌های تغییر اطلاعات کاربران</h1>';
+		if ( isset( $_GET['change_notice'] ) ) {
+			$notice = sanitize_text_field( wp_unslash( $_GET['change_notice'] ) );
+			$class  = false !== strpos( $notice, 'موفقیت' ) ? 'notice-success' : 'notice-info';
+			echo '<div class="notice ' . esc_attr( $class ) . ' is-dismissible"><p>' . esc_html( $notice ) . '</p></div>';
+		}
+		echo '<nav class="vtd-change-filters">';
+		foreach ( array( 'pending' => 'در انتظار بررسی', 'approved' => 'تأییدشده', 'rejected' => 'ردشده', 'all' => 'همه' ) as $key => $label ) {
+			echo '<a class="button ' . ( $status === $key ? 'button-primary' : '' ) . '" href="' . esc_url( admin_url( 'admin.php?page=vetra-changes&status=' . $key ) ) . '">' . esc_html( $label ) . '</a> ';
+		}
+		echo '</nav><table class="widefat striped"><thead><tr><th>کاربر</th><th>اطلاعات درخواستی</th><th>مقدار فعلی</th><th>مقدار جدید</th><th>مدارک</th><th>وضعیت / مرحله</th><th>رسیدگی</th></tr></thead><tbody>';
+		if ( ! $items ) {
+			self::empty_state( 7 );
+		}
+		foreach ( $items as $row ) {
+			$user = get_userdata( (int) $row->user_id );
+			$name = $user ? vtd_current_user_name( $user->ID ) : '#' . (int) $row->user_id;
+			echo '<tr><td>' . esc_html( $name ) . '<br><small>' . esc_html( $user ? $user->user_email : '' ) . '</small></td>';
+			echo '<td>' . esc_html( $row->field_label ) . '</td><td>' . esc_html( $row->current_value ) . '</td><td>' . esc_html( $row->new_value ) . '</td>';
+			echo '<td>' . VTD_Changes::docs_html( $row ) . ( $row->docs_request ? '<p>' . esc_html( $row->docs_request ) . '</p>' : '' ) . '</td>';
+			echo '<td>' . esc_html( VTD_Changes::status_label( $row->status ) ) . '<br><small>' . esc_html( $row->stage ) . '</small></td><td>';
+			if ( 'pending' === $row->status ) {
+				echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="vtd-change-admin-row"><input type="hidden" name="action" value="vtd_change_action"><input type="hidden" name="request_id" value="' . (int) $row->request_id . '">';
+				wp_nonce_field( 'vtd_change_action' );
+				echo '<select name="change_action" data-vtd-admin-change-stage><option value="approve">تأیید و اعمال</option><option value="reject">رد درخواست</option><option value="request_docs">درخواست مدرک تکمیلی</option><option value="request_physical_docs">درخواست اصل مدارک فیزیکی</option>';
+				if ( 'physical_requested' === $row->stage ) { echo '<option value="physical_received">ثبت دریافت مدارک فیزیکی</option>'; }
+				echo '</select><textarea name="admin_note" data-vtd-change-admin-note rows="2" placeholder="یادداشت برای کاربر (برای درخواست مدرک الزامی)"></textarea><button class="button button-primary" type="submit">ثبت تصمیم</button></form>';
+			} else {
+				echo esc_html( $row->admin_note );
+			}
+			echo '</td></tr>';
+		}
+		echo '</tbody></table></div>';
+	}
+
 	public static function departments() {
 		global $wpdb;
 		$table = VTD_DB::departments();

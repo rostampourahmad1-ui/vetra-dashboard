@@ -137,6 +137,28 @@
 		});
 	}
 
+	function initTicketFaq() {
+		var faqStep = document.querySelector("[data-vtd-faq-step]");
+		var form = document.querySelector("[data-vtd-ticket-form]");
+		if (!faqStep || !form) { return; }
+		var formCard = form.closest(".vtd-card");
+		var confirm = faqStep.querySelector("[data-vtd-faq-confirm]");
+		var continueBtn = faqStep.querySelector("[data-vtd-faq-continue]");
+		var fallbackConfirm = form.querySelector("[data-vtd-faq-fallback]");
+		var accepted = form.querySelector('[name="faq_confirmed"]');
+		if (formCard) { formCard.style.display = "none"; }
+		if (fallbackConfirm) { fallbackConfirm.hidden = true; }
+		confirm && confirm.addEventListener("change", function () {
+			continueBtn.disabled = !confirm.checked;
+		});
+		continueBtn && continueBtn.addEventListener("click", function () {
+			if (!confirm || !confirm.checked) { return; }
+			if (accepted && "checkbox" === accepted.type) { accepted.checked = true; }
+			faqStep.style.display = "none";
+			if (formCard) { formCard.style.display = ""; }
+		});
+	}
+
 	function renderNotifications(items, list) {
 		if (!list) {
 			return;
@@ -188,6 +210,33 @@
 	}
 
 	function initForms() {
+		document.querySelectorAll("[data-vtd-change-field]").forEach(function (field) {
+			var value = field.form && field.form.querySelector("[data-vtd-change-value]");
+			if (!value) { return; }
+			function updateChangeInput() {
+				var numeric = field.value === "phone" || field.value === "national_code";
+				value.type = field.value === "phone" ? "tel" : "text";
+				value.inputMode = numeric ? "numeric" : "text";
+				if (field.value === "national_code") { value.maxLength = 10; value.pattern = "[0-9۰-۹٠-٩]{10}"; }
+				else if (field.value === "phone") { value.removeAttribute("maxlength"); value.pattern = "[0-9۰-۹٠-٩]*"; }
+				else { value.removeAttribute("maxlength"); value.removeAttribute("pattern"); }
+			}
+			field.addEventListener("change", updateChangeInput);
+			updateChangeInput();
+		});
+		document.querySelectorAll("[data-vtd-phone-change]").forEach(function (phoneField) {
+			phoneField.addEventListener("click", function () {
+				var requestForm = document.querySelector("[data-vtd-change-request-form]");
+				var field = requestForm && requestForm.querySelector("[data-vtd-change-field]");
+				var value = requestForm && requestForm.querySelector("[data-vtd-change-value]");
+				if (!field || !value) { return; }
+				field.value = "phone";
+				field.dispatchEvent(new Event("change", { bubbles: true }));
+				value.focus();
+				requestForm.scrollIntoView({ behavior: "smooth", block: "center" });
+			});
+		});
+
 		document.querySelectorAll("[data-vtd-profile-form]").forEach(function (form) {
 			var msg = form.querySelector("[data-vtd-form-msg]");
 			form.addEventListener("submit", function (event) {
@@ -262,8 +311,11 @@
 		var starBtn = document.querySelector("[data-vtd-ticket-star]");
 		starBtn && starBtn.addEventListener("click", function () {
 			var ticketId = document.querySelector("[data-vtd-ticket]").getAttribute("data-vtd-ticket");
-			request("tickets/star", { data: { ticket_id: ticketId } }).then(function () {
-				starBtn.classList.toggle("is-active");
+			request("tickets/star", { data: { ticket_id: ticketId } }).then(function (response) {
+				if (response && response.success) {
+					starBtn.classList.toggle("is-active", !!response.starred);
+					starBtn.setAttribute("aria-pressed", response.starred ? "true" : "false");
+				}
 			});
 		});
 
@@ -392,6 +444,7 @@
 		initTheme();
 		initDrawer();
 		initTabs();
+		initTicketFaq();
 		initNotifications();
 		initForms();
 		initResend();

@@ -9,10 +9,12 @@ defined( 'ABSPATH' ) || exit;
 
 $vtd_statuses     = VTD_Tickets::statuses();
 $vtd_priorities   = VTD_Tickets::priorities();
-$vtd_cancel_enabled = VTD_Options::get( 'ticket_cancel_enabled', 1 );
+$vtd_cancel_enabled = VTD_Options::get( 'ticket_allow_cancel', VTD_Options::get( 'ticket_cancel_enabled', 1 ) );
+$vtd_close_enabled = VTD_Options::get( 'ticket_allow_close', VTD_Options::get( 'ticket_cancel_enabled', 1 ) );
 $vtd_rating_enabled = VTD_Options::get( 'ticket_rating', 1 );
 ?>
 <div class="vtd-tickets">
+	<?php echo VTD_Tickets::notices_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	<section class="vtd-toolbar">
 		<div class="vtd-toolbar-left">
 			<a class="vtd-btn vtd-btn-primary" href="<?php echo esc_url( vtd_panel_url( array( 'vtd' => 'new-ticket' ) ) ); ?>">
@@ -70,6 +72,14 @@ $vtd_rating_enabled = VTD_Options::get( 'ticket_rating', 1 );
 										<input type="hidden" name="vtd_ticket_action" value="cancel">
 										<input type="hidden" name="ticket_id" value="<?php echo (int) $ticket->ticket_id; ?>">
 										<button type="submit" class="vtd-btn vtd-btn-sm vtd-btn-danger"><?php esc_html_e( 'Cancel', 'vetra-dashboard' ); ?></button>
+									</form>
+								<?php endif; ?>
+								<?php if ( $vtd_close_enabled && 'closed' !== $ticket->status ) : ?>
+									<form method="post" style="display:inline" onsubmit="return confirm('<?php esc_attr_e( 'Close this ticket?', 'vetra-dashboard' ); ?>')">
+										<?php wp_nonce_field( 'vtd_ticket', 'vtd_ticket_nonce' ); ?>
+										<input type="hidden" name="vtd_ticket_action" value="close">
+										<input type="hidden" name="ticket_id" value="<?php echo (int) $ticket->ticket_id; ?>">
+										<button type="submit" class="vtd-btn vtd-btn-sm vtd-btn-outline">بستن تیکت</button>
 									</form>
 								<?php endif; ?>
 								<?php

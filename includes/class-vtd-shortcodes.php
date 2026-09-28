@@ -49,6 +49,9 @@ class VTD_Shortcodes {
 
 	public static function reset( $atts = array() ) {
 		self::needs_assets();
+		if ( ! VTD_Options::get( 'reset_password_visible', 1 ) ) {
+			return '<div class="vtd-auth-page"><div class="vtd-auth-wrap"><div class="vtd-auth-card">' . esc_html__( 'Password reset is currently disabled.', 'vetra-dashboard' ) . '</div></div></div>';
+		}
 		return '<div class="vtd-auth-page"><div class="vtd-auth-wrap">' . VTD_Templates::auth( 'reset' ) . '</div></div>';
 	}
 

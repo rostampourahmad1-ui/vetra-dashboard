@@ -51,23 +51,41 @@ class VTD_Dashboard {
 		);
 
 		$configured = (array) VTD_Options::get( 'dashboard_shortcuts', array() );
+		$stored     = get_option( VTD_OPTION_KEY, array() );
+		$has_configured_shortcuts = array_key_exists( 'dashboard_shortcuts', (array) $stored );
 		if ( ! empty( $configured ) ) {
 			$items = array();
-			foreach ( $configured as $item ) {
+		foreach ( $configured as $item ) {
 				if ( empty( $item['label'] ) ) {
+					continue;
+				}
+				$url = $item['url'] ?? '#';
+				$query = wp_parse_url( $url, PHP_URL_QUERY );
+				parse_str( (string) $query, $query_args );
+				if ( ! empty( $query_args['vtd'] ) && ! VTD_Modules::section_enabled( sanitize_key( $query_args['vtd'] ) ) ) {
 					continue;
 				}
 				$items[] = array(
 					'label' => $item['label'],
 					'icon'  => $item['icon'] ?? 'default',
-					'url'   => $item['url'] ?? '#',
+					'url'   => $url,
 				);
 			}
-			if ( $items ) {
-				return $items;
-			}
+			return $items;
 		}
-		return $default;
+		if ( $has_configured_shortcuts ) {
+			return array();
+		}
+		return array_values(
+			array_filter(
+				$default,
+				function ( $item ) {
+					$query = wp_parse_url( $item['url'], PHP_URL_QUERY );
+					parse_str( (string) $query, $query_args );
+					return empty( $query_args['vtd'] ) || VTD_Modules::section_enabled( sanitize_key( $query_args['vtd'] ) );
+				}
+			)
+		);
 	}
 
 	public static function avatar_menu_items( $user_id = 0 ) {

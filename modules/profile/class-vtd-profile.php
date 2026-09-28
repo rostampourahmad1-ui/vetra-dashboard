@@ -35,7 +35,7 @@ class VTD_Profile {
 			'first_name' => $user->first_name,
 			'last_name'  => $user->last_name,
 			'phone'      => VTD_Auth::get_phone( $user_id ),
-			'about'      => get_user_meta( $user_id, 'description', true ),
+			'about'      => $user->description,
 			'gender'     => get_user_meta( $user_id, 'vtd_gender', true ),
 			'birthday'   => get_user_meta( $user_id, 'vtd_birthday', true ),
 			'country'    => get_user_meta( $user_id, 'vtd_country', true ),
@@ -45,10 +45,22 @@ class VTD_Profile {
 		foreach ( self::fields() as $slug => $field ) {
 			$data[ $slug ] = get_user_meta( $user_id, 'vtd_' . $slug, true );
 		}
+		$national_meta = sanitize_key( VTD_Options::get( 'national_code_meta', 'national_code' ) );
+		$national_code = get_user_meta( $user_id, $national_meta, true );
+		if ( '' === (string) $national_code ) {
+			$national_code = get_user_meta( $user_id, 'vtd_national_code', true );
+		}
+		$data['national_code'] = $national_code;
 		return $data;
 	}
 
 	public static function save( $user_id, $data ) {
+		if ( ! VTD_Modules::enabled( 'profile' ) ) {
+			return new WP_Error( 'vtd_profile_disabled', 'بخش پروفایل غیرفعال است.', array( 'status' => 403 ) );
+		}
+		if ( VTD_Options::get( 'profile_readonly_mode', 0 ) && ! current_user_can( 'manage_options' ) ) {
+			return new WP_Error( 'vtd_profile_readonly', 'اطلاعات پروفایل فقط از طریق درخواست تغییر قابل اصلاح است.', array( 'status' => 403 ) );
+		}
 		if ( ! VTD_Options::get( 'profile_edit', 1 ) && ! current_user_can( 'manage_options' ) ) {
 			return new WP_Error( 'vtd_profile_locked', __( 'Editing is disabled.', 'vetra-dashboard' ), array( 'status' => 403 ) );
 		}
@@ -135,6 +147,9 @@ class VTD_Profile {
 	}
 
 	public static function change_password( $user_id, $old, $new ) {
+		if ( ! VTD_Modules::enabled( 'profile' ) ) {
+			return new WP_Error( 'vtd_profile_disabled', 'بخش پروفایل غیرفعال است.', array( 'status' => 403 ) );
+		}
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
 			return new WP_Error( 'vtd_user_missing', __( 'User not found.', 'vetra-dashboard' ) );
@@ -155,6 +170,9 @@ class VTD_Profile {
 	}
 
 	public static function save_avatar( $user_id, $request ) {
+		if ( ! VTD_Modules::enabled( 'profile' ) ) {
+			return new WP_Error( 'vtd_profile_disabled', 'بخش پروفایل غیرفعال است.', array( 'status' => 403 ) );
+		}
 		if ( ! VTD_Options::get( 'profile_avatar', 1 ) ) {
 			return new WP_Error( 'vtd_avatar_disabled', __( 'Avatar upload is disabled.', 'vetra-dashboard' ) );
 		}
@@ -204,6 +222,12 @@ class VTD_Profile {
 	}
 
 	public static function verify_field( $user_id, $field, $value, $code ) {
+		if ( ! VTD_Modules::enabled( 'profile' ) ) {
+			return new WP_Error( 'vtd_profile_disabled', 'بخش پروفایل غیرفعال است.', array( 'status' => 403 ) );
+		}
+		if ( VTD_Options::get( 'profile_readonly_mode', 0 ) && ! current_user_can( 'manage_options' ) ) {
+			return new WP_Error( 'vtd_profile_readonly', 'برای تغییر اطلاعات، درخواست تغییر ثبت کنید.' );
+		}
 		if ( 'phone' === $field ) {
 			$phone = vtd_sanitize_phone( $value );
 			if ( '' === $code ) {
@@ -257,6 +281,8 @@ class VTD_Profile {
 				'phone_verified' => VTD_Auth::is_phone_verified( $user_id ),
 				'email_verified' => VTD_Auth::is_email_verified( $user_id ),
 				'attachments'   => VTD_Options::get( 'profile_attachments', 1 ) ? VTD_Attachments::get_for_user( $user_id ) : array(),
+				'change_notice' => VTD_Changes::consume_flash(),
+				'change_requests' => VTD_Changes::list_for_user( $user_id ),
 			)
 		);
 	}

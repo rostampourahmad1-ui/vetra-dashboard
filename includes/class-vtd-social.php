@@ -59,7 +59,8 @@ class VTD_Social {
 	/** Editable copyright line with token replacement. */
 	public static function copyright() {
 		$brand  = VTD_Options::get( 'brand_name', 'Vetra' );
-		$text   = (string) VTD_Options::get( 'footer_copyright', '' );
+		$stored = get_option( VTD_OPTION_KEY, array() );
+		$text   = array_key_exists( 'copyright_text', (array) $stored ) ? (string) $stored['copyright_text'] : (string) VTD_Options::get( 'footer_copyright', '' );
 		$jalali = vtd_gregorian_to_jalali( (int) current_time( 'Y' ), (int) current_time( 'n' ), (int) current_time( 'j' ) );
 		$tokens = array(
 			'{year}'  => vtd_fa_digits( $jalali['year'] ),
@@ -76,23 +77,29 @@ class VTD_Social {
 			return array();
 		}
 		$items = array();
-		foreach ( (array) VTD_Options::get( 'social_icons', array() ) as $row ) {
+		$stored = get_option( VTD_OPTION_KEY, array() );
+		$rows   = array_key_exists( 'social_links', (array) $stored ) ? (array) $stored['social_links'] : (array) VTD_Options::get( 'social_icons', array() );
+		foreach ( $rows as $row ) {
 			$row = wp_parse_args(
 				(array) $row,
-				array( 'network' => '', 'label' => '', 'url' => '', 'color' => '', 'enabled' => 1, 'icon_url' => '' )
+				array( 'network' => '', 'platform' => '', 'label' => '', 'url' => '', 'color' => '', 'enabled' => 1, 'icon_url' => '', 'icon' => '' )
 			);
 			if ( empty( $row['enabled'] ) || '' === trim( (string) $row['url'] ) ) {
 				continue;
 			}
-			$network = self::network( $row['network'] );
+			$network_key = '' !== $row['platform'] ? $row['platform'] : $row['network'];
+			if ( 'twitter' === $network_key ) {
+				$network_key = 'x';
+			}
+			$network     = self::network( $network_key );
 			$color   = sanitize_hex_color( $row['color'] );
 			$items[] = array(
-				'network'  => sanitize_key( $row['network'] ),
+				'network'  => sanitize_key( $network_key ),
 				'label'    => '' !== trim( (string) $row['label'] ) ? sanitize_text_field( $row['label'] ) : $network['label'],
-				'url'      => self::resolve_url( $row['network'], $row['url'] ),
+				'url'      => self::resolve_url( $network_key, $row['url'] ),
 				'color'    => $color ? $color : $network['color'],
 				'icon'     => $network['icon'],
-				'icon_url' => esc_url_raw( $row['icon_url'] ),
+				'icon_url' => esc_url_raw( $row['icon_url'] ? $row['icon_url'] : ( 'http' === substr( (string) $row['icon'], 0, 4 ) ? $row['icon'] : '' ) ),
 			);
 		}
 		return apply_filters( 'vtd_social_items', $items );
@@ -180,7 +187,7 @@ class VTD_Social {
 							target="_blank" rel="noopener noreferrer nofollow"
 							title="<?php echo esc_attr( $item['label'] ); ?>"
 							aria-label="<?php echo esc_attr( $item['label'] ); ?>"
-							<?php echo 'brand' === $mode ? 'style="--vtd-social-color:' . esc_attr( $item['color'] ) . '"' : ''; ?>>
+							<?php echo 'mono' !== $mode ? 'style="--vtd-social-color:' . esc_attr( $item['color'] ) . '"' : ''; ?>>
 							<?php if ( $item['icon_url'] ) : ?>
 								<img src="<?php echo esc_url( $item['icon_url'] ); ?>" alt="<?php echo esc_attr( $item['label'] ); ?>">
 							<?php else : ?>
@@ -196,7 +203,9 @@ class VTD_Social {
 				<div class="vtd-footer-extra"><?php echo wp_kses_post( wpautop( $extra ) ); ?></div>
 			<?php endif; ?>
 
-			<?php if ( VTD_Options::get( 'footer_copyright_enabled', 1 ) && '' !== trim( $note ) ) : ?>
+			<?php $stored_settings = get_option( VTD_OPTION_KEY, array() ); ?>
+			<?php $copyright_enabled = array_key_exists( 'copyright_enabled', (array) $stored_settings ) ? VTD_Options::get( 'copyright_enabled', 1 ) : VTD_Options::get( 'footer_copyright_enabled', 1 ); ?>
+			<?php if ( $copyright_enabled && '' !== trim( $note ) ) : ?>
 				<p class="vtd-copyright"><?php echo wp_kses_post( $note ); ?></p>
 			<?php endif; ?>
 		</footer>

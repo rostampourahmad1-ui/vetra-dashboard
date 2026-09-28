@@ -1272,7 +1272,7 @@ body.vtd-body {
 	padding: 6px 10px;
 	border-radius: 10px;
 	background: var(--vtd-surface-2);
-	color: var(--vtd-muted);
+	color: var(--vtd-social-color, var(--vtd-muted));
 	font-size: 13px;
 	font-weight: 600;
 	transition: all .2s ease;
@@ -1280,7 +1280,7 @@ body.vtd-body {
 }
 
 .vtd-social-link:hover {
-	background: var(--vtd-primary);
+	background: var(--vtd-social-color, var(--vtd-primary));
 	color: #fff;
 	transform: translateY(-1px);
 }
@@ -1288,6 +1288,57 @@ body.vtd-body {
 .vtd-social-link svg {
 	width: 18px;
 	height: 18px;
+}
+
+.vtd-site-footer {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding: 20px 28px;
+	border-top: 1px solid var(--vtd-border);
+	background: var(--vtd-surface);
+	margin-top: auto;
+}
+
+.vtd-social {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.vtd-social-link img {
+	width: 19px;
+	height: 19px;
+	object-fit: contain;
+}
+
+.vtd-social-mode-mono .vtd-social-link { color: var(--vtd-muted); }
+.vtd-social-mode-mono .vtd-social-link:hover { background: var(--vtd-primary); color: #fff; }
+.vtd-footer-extra { max-width: 760px; text-align: center; color: var(--vtd-muted); font-size: 13px; }
+
+.vtd-dashboard-layout-compact { gap: 14px; }
+.vtd-dashboard-layout-compact .vtd-card,
+.vtd-dashboard-layout-compact .vtd-stat { padding: 15px; }
+.vtd-dashboard-layout-grid .vtd-dashboard-blocks { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.vtd-dashboard .vtd-stats { grid-template-columns: repeat(var(--vtd-dashboard-columns, 4), minmax(0, 1fr)); }
+.vtd-readonly-value { display: block; min-height: 42px; padding: 10px 12px; border: 1px solid var(--vtd-border); border-radius: 10px; background: var(--vtd-surface-2); }
+.vtd-change-request-list { display: grid; gap: 12px; margin-top: 24px; }
+.vtd-change-request-item { padding: 14px; border: 1px solid var(--vtd-border); border-radius: 12px; background: var(--vtd-surface-2); }
+.vtd-change-request-item > div:first-child { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.vtd-change-doc-upload { margin-top: 12px; }
+.vtd-faq-list { display: grid; gap: 8px; margin: 12px 0; }
+.vtd-faq-list details { padding: 12px 14px; border: 1px solid var(--vtd-border); border-radius: 12px; background: var(--vtd-surface-2); }
+.vtd-faq-list summary { cursor: pointer; font-weight: 700; }
+.vtd-faq-list p { margin: 10px 0; }
+.vtd-faq-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+
+@media (max-width: 1024px) {
+	.vtd-dashboard .vtd-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 .vtd-copyright {
@@ -1301,6 +1352,11 @@ body.vtd-body {
 		flex-direction: column;
 		text-align: center;
 	}
+	.vtd-dashboard .vtd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+	.vtd-dashboard .vtd-stat { padding: 14px; }
+	.vtd-site-footer { padding: 18px 14px; }
+	.vtd-faq-actions { align-items: stretch; flex-direction: column; }
+	.vtd-faq-actions .vtd-btn { width: 100%; }
 }
 
 /* Ticket FAQ step */

@@ -17,6 +17,23 @@ class VTD_Changes {
 		add_action( 'vtd_change_requested', array( __CLASS__, 'notify_admins' ), 10, 3 );
 	}
 
+	public static function flash( $message ) {
+		$user_id = get_current_user_id();
+		if ( $user_id ) {
+			set_transient( 'vtd_change_notice_' . $user_id, sanitize_text_field( $message ), 5 * MINUTE_IN_SECONDS );
+		}
+	}
+
+	public static function consume_flash() {
+		$user_id = get_current_user_id();
+		if ( ! $user_id ) {
+			return '';
+		}
+		$message = (string) get_transient( 'vtd_change_notice_' . $user_id );
+		delete_transient( 'vtd_change_notice_' . $user_id );
+		return $message;
+	}
+
 	public static function statuses() {
 		return array(
 			self::STATUS_PENDING  => 'در انتظار بررسی',
@@ -87,8 +104,11 @@ class VTD_Changes {
 				return $user->user_email;
 			case 'phone':
 				return VTD_Auth::get_phone( $user_id );
+			case 'national_code':
+				$value = get_user_meta( $user_id, (string) VTD_Options::get( 'national_code_meta', 'national_code' ), true );
+				return '' !== (string) $value ? $value : get_user_meta( $user_id, 'vtd_national_code', true );
 			case 'about':
-				return get_user_meta( $user_id, 'description', true );
+				return $user->description;
 			case 'website':
 				return $user->user_url;
 			case 'gender':
@@ -375,6 +395,41 @@ class VTD_Changes {
 		return true;
 	}
 
+	/** Admin: require original physical documents before reviewing a request. */
+	public static function request_physical_docs( $request_id, $note = '' ) {
+		global $wpdb;
+		$row = self::get( $request_id );
+		if ( ! $row ) {
+			return new WP_Error( 'vtd_change_missing', 'درخواست یافت نشد.' );
+		}
+		$wpdb->update(
+			VTD_DB::change_requests(),
+			array( 'stage' => 'physical_requested', 'docs_request' => sanitize_textarea_field( $note ), 'updated_at' => current_time( 'mysql' ) ),
+			array( 'request_id' => (int) $request_id ),
+			array( '%s', '%s', '%s' ),
+			array( '%d' )
+		);
+		do_action( 'vtd_change_physical_docs_requested', (int) $request_id, (int) $row->user_id, $note );
+		return true;
+	}
+
+	/** Admin: mark submitted physical documents as received and ready to review. */
+	public static function mark_physical_docs_received( $request_id ) {
+		global $wpdb;
+		$row = self::get( $request_id );
+		if ( ! $row || 'physical_requested' !== $row->stage ) {
+			return new WP_Error( 'vtd_change_stage', 'این درخواست منتظر دریافت مدارک فیزیکی نیست.' );
+		}
+		$wpdb->update(
+			VTD_DB::change_requests(),
+			array( 'stage' => 'physical_received', 'updated_at' => current_time( 'mysql' ) ),
+			array( 'request_id' => (int) $request_id ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
+		return true;
+	}
+
 	/** User: upload the documents the admin asked for. */
 	public static function submit_docs( $request_id, $user_id, $docs = array(), $note = '' ) {
 		global $wpdb;
@@ -385,6 +440,9 @@ class VTD_Changes {
 		$docs = array_values( array_filter( array_map( 'intval', (array) $docs ) ) );
 		if ( ! $docs ) {
 			return new WP_Error( 'vtd_change_docs', 'حداقل یک فایل باید بارگذاری شود.' );
+		}
+		if ( ! in_array( $row->stage, array( 'docs_requested', 'submitted', 'docs_received' ), true ) ) {
+			return new WP_Error( 'vtd_change_stage', 'در این مرحله امکان بارگذاری مدرک وجود ندارد.' );
 		}
 		$existing = self::docs( $row );
 		$wpdb->update(
@@ -408,6 +466,12 @@ class VTD_Changes {
 		$row = self::get( $request_id );
 		if ( ! $row ) {
 			return new WP_Error( 'vtd_change_missing', 'درخواست یافت نشد.' );
+		}
+		if ( 'physical_requested' === $row->stage || 'docs_requested' === $row->stage ) {
+			return new WP_Error( 'vtd_change_docs_pending', 'ابتدا مدارک درخواستی را دریافت و بررسی کنید.' );
+		}
+		if ( VTD_Options::get( 'profile_change_require_docs', 1 ) && ! self::docs( $row ) && 'physical_received' !== $row->stage ) {
+			return new WP_Error( 'vtd_change_docs_missing', 'تا زمان دریافت مدارک کاربر امکان تأیید این درخواست وجود ندارد.' );
 		}
 		$applied = self::apply_value( $row );
 		if ( is_wp_error( $applied ) ) {
@@ -519,9 +583,7 @@ class VTD_Changes {
 		if ( ! $row ) {
 			return;
 		}
-		$user = get_userdata( $user_id );
-		$name = $user ? trim( $user->first_name . ' ' . $user->last_name ) : '';
-		$name = '' !== $name ? $name : ( $user ? $user->display_name : '' );
+		$name = vtd_current_user_name( $user_id );
 
 		$lines = array(
 			sprintf( 'درخواست تغییر «%s» از سوی %s ثبت شد.', self::field_label( $field ), $name ),

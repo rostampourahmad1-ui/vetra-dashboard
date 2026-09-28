@@ -30,18 +30,25 @@ $vtd_data     = VTD_Auth::$form_data;
 		<?php if ( ! empty( $vtd_settings['register_first_last'] ) ) : ?>
 			<label class="vtd-field">
 				<span><?php esc_html_e( 'First name', 'vetra-dashboard' ); ?></span>
-				<input type="text" name="first_name" value="<?php echo esc_attr( $vtd_data['first_name'] ?? '' ); ?>">
+				<input type="text" name="first_name" value="<?php echo esc_attr( $vtd_data['first_name'] ?? '' ); ?>" required>
 			</label>
 			<label class="vtd-field">
 				<span><?php esc_html_e( 'Last name', 'vetra-dashboard' ); ?></span>
-				<input type="text" name="last_name" value="<?php echo esc_attr( $vtd_data['last_name'] ?? '' ); ?>">
+				<input type="text" name="last_name" value="<?php echo esc_attr( $vtd_data['last_name'] ?? '' ); ?>" required>
 			</label>
 		<?php endif; ?>
 
-		<label class="vtd-field">
-			<span><?php esc_html_e( 'Username', 'vetra-dashboard' ); ?></span>
-			<input type="text" name="username" value="<?php echo esc_attr( $vtd_data['username'] ?? '' ); ?>" autocomplete="username" required>
-		</label>
+		<?php if ( ! empty( $vtd_settings['username_is_national_code'] ) ) : ?>
+			<label class="vtd-field">
+				<span>کد ملی (نام کاربری)</span>
+				<input type="text" name="national_code" value="<?php echo esc_attr( $vtd_data['national_code'] ?? '' ); ?>" inputmode="numeric" pattern="[0-9۰-۹٠-٩]{10}" maxlength="10" autocomplete="off" required>
+			</label>
+		<?php else : ?>
+			<label class="vtd-field">
+				<span><?php esc_html_e( 'Username', 'vetra-dashboard' ); ?></span>
+				<input type="text" name="username" value="<?php echo esc_attr( $vtd_data['username'] ?? '' ); ?>" autocomplete="username" required>
+			</label>
+		<?php endif; ?>
 
 		<?php if ( ! empty( $vtd_settings['email_login'] ) ) : ?>
 			<label class="vtd-field">
@@ -53,7 +60,7 @@ $vtd_data     = VTD_Auth::$form_data;
 		<?php if ( ! empty( $vtd_settings['phone_login'] ) ) : ?>
 			<label class="vtd-field">
 				<span><?php esc_html_e( 'Mobile number', 'vetra-dashboard' ); ?></span>
-				<input type="tel" name="phone" placeholder="09xxxxxxxxx" value="<?php echo esc_attr( $vtd_data['phone'] ?? '' ); ?>" autocomplete="tel">
+				<input type="tel" name="phone" inputmode="numeric" pattern="[0-9۰-۹٠-٩]*" placeholder="09xxxxxxxxx" value="<?php echo esc_attr( $vtd_data['phone'] ?? '' ); ?>" autocomplete="tel">
 			</label>
 		<?php endif; ?>
 

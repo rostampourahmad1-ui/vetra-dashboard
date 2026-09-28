@@ -100,10 +100,12 @@ class VTD_Router {
 	}
 
 	public static function current_section() {
-		$section  = isset( $_GET['vtd'] ) ? sanitize_key( wp_unslash( $_GET['vtd'] ) ) : 'dashboard';
+		$query_section = get_query_var( 'vtd' );
+		$section       = isset( $_GET['vtd'] ) ? sanitize_key( wp_unslash( $_GET['vtd'] ) ) : sanitize_key( $query_section );
+		$section       = '' !== $section ? $section : 'dashboard';
 		$sections = self::sections();
 		if ( ! isset( $sections[ $section ] ) ) {
-			$section = 'dashboard';
+			$section = isset( $sections['dashboard'] ) ? 'dashboard' : ( $sections ? (string) array_key_first( $sections ) : 'dashboard' );
 		}
 		return $section;
 	}
@@ -131,12 +133,13 @@ class VTD_Router {
 				$enabled[] = $item['slug'];
 			}
 		}
-		if ( empty( $enabled ) ) {
+		$stored_settings = get_option( VTD_OPTION_KEY, array() );
+		if ( empty( $enabled ) && ! array_key_exists( 'menu_items', (array) $stored_settings ) ) {
 			$enabled = array( 'dashboard', 'profile', 'tickets', 'notifications', 'polls', 'attachments', 'wallet', 'banking', 'comments' );
 		}
 
 		foreach ( $sections as $slug => $data ) {
-			if ( empty( $data['hidden'] ) && empty( $data['staff'] ) && ! in_array( $slug, $enabled, true ) ) {
+			if ( ! VTD_Modules::section_enabled( $slug ) || ( empty( $data['hidden'] ) && empty( $data['staff'] ) && ! in_array( $slug, $enabled, true ) ) ) {
 				unset( $sections[ $slug ] );
 			}
 		}
@@ -226,6 +229,9 @@ class VTD_Router {
 		if ( empty( $sections[ $slug ] ) ) {
 			return '';
 		}
+		if ( ! VTD_Modules::section_enabled( $slug ) ) {
+			return VTD_Templates::module( 'alert', array( 'message' => 'این بخش در حال حاضر غیرفعال است.', 'type' => 'error' ) );
+		}
 		if ( ! empty( $sections[ $slug ]['staff'] ) && ! vtd_is_staff() ) {
 			return VTD_Templates::module( 'alert', array( 'message' => __( 'You do not have access to this section.', 'vetra-dashboard' ), 'type' => 'error' ) );
 		}
@@ -246,43 +252,26 @@ class VTD_Router {
 	}
 
 	public static function handle_actions() {
-		// Handle profile change request
-		if ( isset( $_POST['vtd_action'] ) && 'profile_change_request' === $_POST['vtd_action'] && is_user_logged_in() ) {
+		// Handle profile change requests using the approval workflow table.
+		if ( isset( $_POST['vtd_action'] ) && in_array( sanitize_key( wp_unslash( $_POST['vtd_action'] ) ), array( 'profile_change_request', 'profile_submit_docs' ), true ) && is_user_logged_in() ) {
 			$nonce = isset( $_POST['vtd_change_request_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['vtd_change_request_nonce'] ) ) : '';
 			if ( wp_verify_nonce( $nonce, 'vtd_change_request' ) ) {
 				$user_id = get_current_user_id();
-				$field = sanitize_key( wp_unslash( $_POST['change_field'] ?? '' ) );
-				$value = sanitize_text_field( wp_unslash( $_POST['change_value'] ?? '' ) );
-				$reason = sanitize_textarea_field( wp_unslash( $_POST['change_reason'] ?? '' ) );
-				$doc_id = 0;
-
-				if ( ! empty( $_FILES['change_document']['name'] ) ) {
-					require_once ABSPATH . 'wp-admin/includes/file.php';
-					require_once ABSPATH . 'wp-admin/includes/media.php';
-					$doc_id = media_handle_sideload( $_FILES['change_document'], 0, __( 'Change request document', 'vetra-dashboard' ) );
-					if ( is_wp_error( $doc_id ) ) {
-						$doc_id = 0;
+				$action  = sanitize_key( wp_unslash( $_POST['vtd_action'] ) );
+				$reason  = sanitize_textarea_field( wp_unslash( $_POST['change_reason'] ?? '' ) );
+				if ( ! VTD_Options::get( 'profile_change_request', 1 ) ) {
+					$result = new WP_Error( 'vtd_change_disabled', 'درخواست تغییر اطلاعات در حال حاضر غیرفعال است.' );
+				} else {
+					$docs = VTD_Changes::upload_docs( 'change_docs' );
+					if ( 'profile_submit_docs' === $action ) {
+						$result = VTD_Changes::submit_docs( absint( $_POST['request_id'] ?? 0 ), $user_id, $docs, $reason );
+					} else {
+						$result = VTD_Changes::submit( $user_id, sanitize_key( wp_unslash( $_POST['change_field'] ?? '' ) ), wp_unslash( $_POST['change_value'] ?? '' ), $docs, $reason );
 					}
 				}
-
-				if ( $field && $value ) {
-					global $wpdb;
-					$wpdb->insert(
-						$wpdb->prefix . 'vtd_change_requests',
-						array(
-							'user_id' => $user_id,
-							'field_name' => $field,
-							'requested_value' => $value,
-							'reason' => $reason,
-							'document_id' => (int) $doc_id,
-							'status' => 'pending',
-							'created_at' => current_time( 'mysql' ),
-						),
-						array( '%d', '%s', '%s', '%s', '%d', '%s', '%s' )
-					);
-					wp_safe_redirect( vtd_panel_url( array( 'vtd' => 'profile', 'change_request' => 'submitted' ) ) );
-					exit;
-				}
+				VTD_Changes::flash( is_wp_error( $result ) ? $result->get_error_message() : 'درخواست تغییر اطلاعات ثبت شد و پس از بررسی مدیر اعمال می‌شود.' );
+				wp_safe_redirect( vtd_panel_url( array( 'vtd' => 'profile' ) ) );
+				exit;
 			}
 		}
 

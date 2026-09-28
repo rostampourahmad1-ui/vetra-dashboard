@@ -158,6 +158,10 @@ class VTD_Auth {
 			self::$errors[] = __( 'Security check failed. Please try again.', 'vetra-dashboard' );
 			return;
 		}
+		if ( in_array( $action, array( 'reset_request', 'reset_set' ), true ) && ! VTD_Options::get( 'reset_password_visible', 1 ) ) {
+			self::$errors[] = __( 'Password reset is currently disabled.', 'vetra-dashboard' );
+			return;
+		}
 
 		switch ( $action ) {
 			case 'login':
@@ -326,6 +330,11 @@ class VTD_Auth {
 		}
 
 		$username   = sanitize_user( self::field( 'username' ) );
+		$national_code = '';
+		if ( VTD_Options::get( 'username_is_national_code', 1 ) ) {
+			$national_code = preg_replace( '/\D/', '', _vtd_normalize_digits( self::field( 'national_code' ) ) );
+			$username = $national_code;
+		}
 		$email      = sanitize_email( self::field( 'email' ) );
 		$phone      = self::field( 'phone' );
 		$password   = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : '';
@@ -333,15 +342,20 @@ class VTD_Auth {
 		$last_name  = self::field( 'last_name' );
 
 		$birthday = self::field( 'birthday' );
-		self::$form_data = compact( 'username', 'email', 'phone', 'first_name', 'last_name', 'birthday' );
+		self::$form_data = compact( 'username', 'national_code', 'email', 'phone', 'first_name', 'last_name', 'birthday' );
 
 		if ( ! VTD_Options::get( 'register_first_last', 1 ) ) {
 			$first_name = '';
 			$last_name  = '';
+		} elseif ( '' === trim( $first_name ) || '' === trim( $last_name ) ) {
+			self::$errors[] = 'نام و نام خانوادگی را وارد کنید.';
 		}
 
 		if ( '' === $username || ! validate_username( $username ) ) {
 			self::$errors[] = __( 'Please enter a valid username.', 'vetra-dashboard' );
+		}
+		if ( VTD_Options::get( 'username_is_national_code', 1 ) && ! preg_match( '/^\d{10}$/', $national_code ) ) {
+			self::$errors[] = __( 'کد ملی باید ۱۰ رقم باشد.', 'vetra-dashboard' );
 		}
 		if ( VTD_Options::get( 'email_login', 1 ) ) {
 			if ( '' === $email || ! is_email( $email ) ) {
@@ -401,6 +415,11 @@ class VTD_Auth {
 			update_user_meta( $user_id, self::EMAIL_VERIFIED_META, 1 );
 		}
 		update_user_meta( $user_id, 'vtd_birthday', '' !== $birthday ? vtd_jalali_to_gregorian( $birthday ) : '' );
+		if ( '' !== $national_code ) {
+			$national_meta = sanitize_key( VTD_Options::get( 'national_code_meta', 'national_code' ) );
+			update_user_meta( $user_id, $national_meta, $national_code );
+			update_user_meta( $user_id, 'vtd_national_code', $national_code );
+		}
 
 		do_action( 'vtd_user_registered', $user_id );
 

@@ -13,6 +13,7 @@ class VTD_Tickets {
 		add_action( 'init', array( __CLASS__, 'process_form' ), 30 );
 		add_action( 'vtd_ticket_created', array( __CLASS__, 'notify_created' ), 20, 2 );
 		add_action( 'vtd_ticket_replied', array( __CLASS__, 'notify_replied' ), 20, 4 );
+		add_action( 'vtd_ticket_closed', array( __CLASS__, 'notify_closed' ), 20, 2 );
 	}
 
 	/* Departments ---------------------------------------------------------- */
@@ -75,6 +76,19 @@ class VTD_Tickets {
 	public static function department_assignments( $department_id = 0 ) {
 		$rows  = (array) VTD_Options::get( 'ticket_department_assign', array() );
 		$users = array();
+		if ( $department_id && isset( $rows[ (string) $department_id ] ) ) {
+			return array_values( array_unique( array_filter( array_map( 'absint', (array) $rows[ (string) $department_id ] ) ) ) );
+		}
+		if ( ! $department_id ) {
+			foreach ( $rows as $key => $assigned ) {
+				if ( is_array( $assigned ) && false !== strpos( (string) $key, 'dept_' ) ) {
+					$users = array_merge( $users, array_map( 'absint', $assigned ) );
+				}
+			}
+			if ( $users ) {
+				return array_values( array_unique( array_filter( $users ) ) );
+			}
+		}
 		foreach ( $rows as $row ) {
 			$row = wp_parse_args( (array) $row, array( 'user_id' => 0, 'department_id' => 0, 'enabled' => 1 ) );
 			if ( empty( $row['enabled'] ) || ! (int) $row['user_id'] ) {
@@ -129,7 +143,7 @@ class VTD_Tickets {
 		if ( in_array( $user_id, $staff, true ) ) {
 			return true;
 		}
-		return ! $staff && vtd_is_staff( $user_id );
+		return false;
 	}
 
 	/** Staff phone numbers that must be notified about a ticket. */
@@ -198,6 +212,10 @@ class VTD_Tickets {
 		return VTD_SMS::send( $phone, $message, 'ticket' );
 	}
 
+	protected static function sms_event_enabled( $event ) {
+		return VTD_Options::get( 'ticket_sms_notify', 0 ) && in_array( $event, (array) VTD_Options::get( 'ticket_sms_events', array() ), true );
+	}
+
 	public static function notify_created( $ticket_id, $user_id ) {
 		$ticket = self::get( $ticket_id );
 		if ( ! $ticket ) {
@@ -205,7 +223,7 @@ class VTD_Tickets {
 		}
 		$title = sprintf( '#%d %s', (int) $ticket_id, $ticket->ticket_title );
 
-		if ( VTD_Options::get( 'ticket_sms_notify_user', 0 ) ) {
+		if ( self::sms_event_enabled( 'created' ) && VTD_Options::get( 'ticket_sms_notify_user', 0 ) ) {
 			$phone = VTD_Auth::get_phone( $user_id );
 			self::send_sms(
 				$phone,
@@ -215,7 +233,7 @@ class VTD_Tickets {
 			);
 		}
 
-		if ( VTD_Options::get( 'ticket_sms_notify_staff', 0 ) ) {
+		if ( self::sms_event_enabled( 'created' ) && VTD_Options::get( 'ticket_sms_notify_staff', 0 ) ) {
 			$message = sprintf( 'تیکت جدید %s در انتظار بررسی است.', $title );
 			foreach ( self::staff_phones( (int) $ticket->department_id ) as $phone ) {
 				self::send_sms(
@@ -235,7 +253,7 @@ class VTD_Tickets {
 		}
 		$title = sprintf( '#%d %s', (int) $ticket_id, $ticket->ticket_title );
 
-		if ( $is_staff && VTD_Options::get( 'ticket_sms_notify_user', 0 ) ) {
+		if ( self::sms_event_enabled( 'replied' ) && $is_staff && VTD_Options::get( 'ticket_sms_notify_user', 0 ) ) {
 			$phone = VTD_Auth::get_phone( $user_id );
 			self::send_sms(
 				$phone,
@@ -245,7 +263,7 @@ class VTD_Tickets {
 			);
 		}
 
-		if ( ! $is_staff && VTD_Options::get( 'ticket_sms_notify_staff', 0 ) ) {
+		if ( self::sms_event_enabled( 'replied' ) && ! $is_staff && VTD_Options::get( 'ticket_sms_notify_staff', 0 ) ) {
 			$message = sprintf( 'پاسخ کاربر برای تیکت %s ثبت شد.', $title );
 			foreach ( self::staff_phones( (int) $ticket->department_id ) as $phone ) {
 				self::send_sms(
@@ -254,6 +272,24 @@ class VTD_Tickets {
 					'ticket_sms_pattern_reply',
 					array( 'ticket_id' => (string) $ticket_id, 'title' => $ticket->ticket_title, 'link' => self::ticket_link( $ticket_id ) )
 				);
+			}
+		}
+	}
+
+	public static function notify_closed( $ticket_id, $actor_id ) {
+		if ( ! self::sms_event_enabled( 'closed' ) ) {
+			return;
+		}
+		$ticket = self::get( $ticket_id );
+		if ( ! $ticket ) {
+			return;
+		}
+		if ( VTD_Options::get( 'ticket_sms_notify_user', 0 ) ) {
+			self::send_sms( VTD_Auth::get_phone( (int) $ticket->user_id ), sprintf( 'تیکت شماره %d بسته شد.', $ticket_id ), 'ticket_sms_pattern_closed', array( 'ticket_id' => (string) $ticket_id, 'title' => $ticket->ticket_title, 'link' => self::ticket_link( $ticket_id ) ) );
+		}
+		if ( VTD_Options::get( 'ticket_sms_notify_staff', 0 ) && (int) $actor_id === (int) $ticket->user_id ) {
+			foreach ( self::staff_phones( (int) $ticket->department_id ) as $phone ) {
+				self::send_sms( $phone, sprintf( 'تیکت شماره %d توسط کاربر بسته شد.', $ticket_id ), 'ticket_sms_pattern_closed', array( 'ticket_id' => (string) $ticket_id, 'title' => $ticket->ticket_title, 'link' => self::ticket_link( $ticket_id ) ) );
 			}
 		}
 	}
@@ -343,6 +379,7 @@ class VTD_Tickets {
 				'paged'         => 1,
 				'orderby'       => 'updated_at',
 				'order'         => 'DESC',
+				'department_ids' => null,
 			)
 		);
 
@@ -356,6 +393,15 @@ class VTD_Tickets {
 		if ( $args['department_id'] ) {
 			$where[]  = 'department_id = %d';
 			$params[] = $args['department_id'];
+		}
+		if ( is_array( $args['department_ids'] ) ) {
+			$department_ids = array_values( array_unique( array_filter( array_map( 'absint', $args['department_ids'] ) ) ) );
+			if ( ! $department_ids ) {
+				$where[] = 'department_id = 0';
+			} else {
+				$where[] = 'department_id IN (' . implode( ',', array_fill( 0, count( $department_ids ), '%d' ) ) . ')';
+				$params  = array_merge( $params, $department_ids );
+			}
 		}
 		if ( $args['status'] && 'all' !== $args['status'] ) {
 			$where[]  = 'status = %s';
@@ -401,18 +447,22 @@ class VTD_Tickets {
 	}
 
 	public static function can_view( $user_id, $ticket ) {
-		if ( ! $ticket ) {
+		if ( ! VTD_Modules::enabled( 'tickets' ) || ! $ticket ) {
 			return false;
 		}
 		if ( (int) $ticket->user_id === (int) $user_id ) {
 			return true;
 		}
-		return vtd_is_staff( $user_id );
+		return self::is_department_staff( $user_id, (int) $ticket->department_id );
 	}
 
 	public static function create( $user_id, $data ) {
 		if ( ! VTD_Options::get( 'ticket_enabled', 1 ) ) {
 			return new WP_Error( 'vtd_ticket_disabled', __( 'The ticket system is disabled.', 'vetra-dashboard' ) );
+		}
+		$faq_has_content = VTD_Options::get( 'ticket_faq_content', '' ) || VTD_Options::get( 'ticket_faq_items', array() ) || VTD_Options::get( 'ticket_faq_links', array() );
+		if ( VTD_Options::get( 'ticket_faq_enabled', 1 ) && VTD_Options::get( 'ticket_faq_gate', 1 ) && $faq_has_content && empty( $data['faq_confirmed'] ) ) {
+			return new WP_Error( 'vtd_ticket_faq_required', 'برای ادامه، تأیید کنید که پرسش‌های متداول و راهنماها را مطالعه کرده‌اید.' );
 		}
 
 		$title    = sanitize_text_field( $data['title'] ?? '' );
@@ -429,7 +479,10 @@ class VTD_Tickets {
 		if ( ! array_key_exists( $priority, self::priorities() ) ) {
 			$priority = 'medium';
 		}
-		if ( ! $department ) {
+		$departments_selectable = VTD_Options::get( 'ticket_departments_visible', 1 ) && VTD_Options::get( 'ticket_departments_toggle', 1 );
+		if ( ! $departments_selectable ) {
+			$department = self::default_department_id();
+		} elseif ( ! $department ) {
 			$department = self::default_department_id();
 		}
 		if ( ! $department ) {
@@ -466,6 +519,9 @@ class VTD_Tickets {
 			array( '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s' )
 		);
 		$ticket_id = (int) $wpdb->insert_id;
+		if ( ! $ticket_id ) {
+			return new WP_Error( 'vtd_ticket_save', 'ثبت تیکت در پایگاه داده انجام نشد. لطفاً دوباره تلاش کنید.' );
+		}
 
 		$auto = VTD_Options::get( 'ticket_auto_reply', '' );
 		if ( $auto ) {
@@ -483,7 +539,6 @@ class VTD_Tickets {
 		}
 
 		do_action( 'vtd_ticket_created', $ticket_id, $user_id );
-		self::maybe_send_sms( $ticket_id, 'created' );
 		return $ticket_id;
 	}
 
@@ -522,19 +577,23 @@ class VTD_Tickets {
 		$wpdb->update( VTD_DB::tickets(), array( 'status' => $status, 'updated_at' => current_time( 'mysql' ) ), array( 'ticket_id' => $ticket_id ), array( '%s', '%s' ), array( '%d' ) );
 
 		do_action( 'vtd_ticket_replied', $ticket_id, $reply_id, (int) $ticket->user_id, $is_staff );
-		self::maybe_send_sms( $ticket_id, 'replied' );
 		return $reply_id;
 	}
 
-	public static function close( $user_id, $ticket_id ) {
+	public static function close( $user_id, $ticket_id, $note = '', $action = 'close' ) {
 		$ticket = self::get( $ticket_id );
 		if ( ! self::can_view( $user_id, $ticket ) ) {
 			return new WP_Error( 'vtd_ticket_denied', __( 'You do not have access.', 'vetra-dashboard' ), array( 'status' => 403 ) );
 		}
+		if ( 'cancel' === $action && ! VTD_Options::get( 'ticket_allow_cancel', VTD_Options::get( 'ticket_cancel_enabled', 1 ) ) ) {
+			return new WP_Error( 'vtd_ticket_cancel_disabled', 'لغو تیکت در حال حاضر غیرفعال است.' );
+		}
+		if ( 'cancel' !== $action && ! VTD_Options::get( 'ticket_allow_close', VTD_Options::get( 'ticket_cancel_enabled', 1 ) ) ) {
+			return new WP_Error( 'vtd_ticket_close_disabled', 'بستن تیکت در حال حاضر غیرفعال است.' );
+		}
 		global $wpdb;
 		$wpdb->update( VTD_DB::tickets(), array( 'status' => 'closed', 'updated_at' => current_time( 'mysql' ) ), array( 'ticket_id' => $ticket_id ), array( '%s', '%s' ), array( '%d' ) );
 		do_action( 'vtd_ticket_closed', $ticket_id, $user_id );
-		self::maybe_send_sms( $ticket_id, 'closed' );
 		return true;
 	}
 
@@ -551,6 +610,9 @@ class VTD_Tickets {
 		$ticket = self::get( $ticket_id );
 		if ( ! $ticket || (int) $ticket->user_id !== (int) $user_id ) {
 			return new WP_Error( 'vtd_ticket_denied', __( 'You do not have access.', 'vetra-dashboard' ), array( 'status' => 403 ) );
+		}
+		if ( ! VTD_Modules::enabled( 'tickets' ) || ! VTD_Options::get( 'ticket_rating', 1 ) || 'closed' !== $ticket->status ) {
+			return new WP_Error( 'vtd_ticket_rating_unavailable', 'امتیازدهی پس از بسته‌شدن تیکت فعال است.' );
 		}
 		$score = max( 1, min( 5, (int) $score ) );
 		global $wpdb;
@@ -571,12 +633,12 @@ class VTD_Tickets {
 	}
 
 	public static function toggle_star( $user_id, $ticket_id ) {
-		if ( ! vtd_is_staff( $user_id ) ) {
-			return new WP_Error( 'vtd_ticket_denied', __( 'You do not have access.', 'vetra-dashboard' ), array( 'status' => 403 ) );
-		}
 		$ticket = self::get( $ticket_id );
 		if ( ! $ticket ) {
 			return new WP_Error( 'vtd_ticket_missing', __( 'Ticket not found.', 'vetra-dashboard' ), array( 'status' => 404 ) );
+		}
+		if ( ! VTD_Modules::enabled( 'tickets' ) || ! self::is_department_staff( $user_id, (int) $ticket->department_id ) ) {
+			return new WP_Error( 'vtd_ticket_denied', __( 'You do not have access.', 'vetra-dashboard' ), array( 'status' => 403 ) );
 		}
 		global $wpdb;
 		$starred = $ticket->starred ? 0 : 1;
@@ -648,6 +710,13 @@ class VTD_Tickets {
 					} else {
 						self::flash( 'success', 'cancel' === $action ? __( 'Ticket cancelled.', 'vetra-dashboard' ) : __( 'Ticket closed.', 'vetra-dashboard' ) );
 					}
+					break;
+
+				case 'rate':
+					$ticket_id = (int) ( $_POST['ticket_id'] ?? 0 );
+					$result    = self::rate( $user_id, $ticket_id, (int) ( $_POST['score'] ?? 0 ), wp_unslash( $_POST['feedback'] ?? '' ) );
+					$target    = self::ticket_link( $ticket_id );
+					self::flash( is_wp_error( $result ) ? 'error' : 'success', is_wp_error( $result ) ? $result->get_error_message() : __( 'Your feedback has been submitted.', 'vetra-dashboard' ) );
 					break;
 
 				default:
@@ -765,7 +834,7 @@ class VTD_Tickets {
 	}
 
 	public static function render_new() {
-		$departments = self::departments();
+		$departments = self::visible_departments();
 		$dept_toggle = VTD_Options::get( 'ticket_departments_toggle', 1 );
 		if ( ! $dept_toggle ) {
 			$departments = array();
@@ -777,6 +846,10 @@ class VTD_Tickets {
 				'priorities'  => self::priorities(),
 				'faq_enabled' => VTD_Options::get( 'ticket_faq_enabled', 1 ),
 				'faq_content' => VTD_Options::get( 'ticket_faq_content', '' ),
+				'faq_intro' => VTD_Options::get( 'ticket_faq_intro', '' ),
+				'faq_gate' => VTD_Options::get( 'ticket_faq_gate', 1 ),
+				'faq_items' => (array) VTD_Options::get( 'ticket_faq_items', array() ),
+				'faq_links' => (array) VTD_Options::get( 'ticket_faq_links', array() ),
 				'cancel_enabled' => VTD_Options::get( 'ticket_cancel_enabled', 1 ),
 				'rating_enabled' => VTD_Options::get( 'ticket_rating', 1 ),
 			)
@@ -784,7 +857,7 @@ class VTD_Tickets {
 	}
 
 	public static function render_single() {
-		$ticket_id = isset( $_GET['ticket'] ) ? (int) $_GET['ticket'] : 0;
+		$ticket_id = (int) ( get_query_var( 'ticket' ) ? get_query_var( 'ticket' ) : ( $_GET['ticket'] ?? 0 ) );
 		$ticket    = self::get( $ticket_id );
 		$user_id   = get_current_user_id();
 
@@ -851,9 +924,25 @@ class VTD_Tickets {
 		$status  = isset( $_GET['ticket_status'] ) ? sanitize_key( wp_unslash( $_GET['ticket_status'] ) ) : '';
 		$dep     = isset( $_GET['department'] ) ? (int) $_GET['department'] : 0;
 		$search  = isset( $_GET['ticket_search'] ) ? sanitize_text_field( wp_unslash( $_GET['ticket_search'] ) ) : '';
+		$departments = self::departments();
+		$allowed_department_ids = array();
+		if ( ! current_user_can( 'manage_options' ) ) {
+			foreach ( $departments as $department_row ) {
+				if ( self::is_department_staff( get_current_user_id(), (int) $department_row->department_id ) ) {
+					$allowed_department_ids[] = (int) $department_row->department_id;
+				}
+			}
+			$departments = array_values( array_filter( $departments, function ( $department_row ) use ( $allowed_department_ids ) {
+				return in_array( (int) $department_row->department_id, $allowed_department_ids, true );
+			} ) );
+			if ( $dep && ! in_array( $dep, $allowed_department_ids, true ) ) {
+				$dep = 0;
+			}
+		}
 		$result  = self::query(
 			array(
 				'department_id' => $dep,
+				'department_ids' => current_user_can( 'manage_options' ) ? null : $allowed_department_ids,
 				'status'        => $status,
 				'search'        => $search,
 				'paged'         => $paged,
@@ -877,7 +966,7 @@ class VTD_Tickets {
 				'items'       => $result['items'],
 				'total'       => $result['total'],
 				'counts'      => $counts,
-				'departments' => self::departments(),
+				'departments' => $departments,
 				'status'      => $status,
 				'department'  => $dep,
 				'search'      => $search,

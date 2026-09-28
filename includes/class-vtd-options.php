@@ -79,9 +79,7 @@ class VTD_Options {
 				array( 'slug' => 'quick_access', 'enabled' => 1 ),
 				array( 'slug' => 'account_summary', 'enabled' => 1 ),
 			),
-			'dashboard_layout'    => 'default',
-			'social_links'        => array(),
-			'copyright_text'      => '',
+			'copyright_text'      => '© {year} Vetra — تمامی حقوق برای Vetra محفوظ است.',
 			'copyright_enabled'   => 1,
 			'profile_avatar'      => 1,
 			'profile_custom_fields' => array(
@@ -92,8 +90,8 @@ class VTD_Options {
 			'profile_confirm_email' => 1,
 			'profile_confirm_phone' => 1,
 			'profile_attachments' => 1,
-			'profile_readonly_mode' => 0,
-			'profile_change_request' => 0,
+			'profile_readonly_mode' => 1,
+			'profile_change_request' => 1,
 			'reset_password_visible' => 1,
 			'ticket_enabled'      => 1,
 			'ticket_allow_guest_departments' => 1,
@@ -198,13 +196,17 @@ class VTD_Options {
 			'footer_copyright_enabled' => 1,
 			'footer_copyright'    => '© {year} Vetra — تمامی حقوق برای Vetra محفوظ است.',
 			'footer_extra'        => '',
+			'social_links'        => array(
+				array( 'platform' => 'instagram', 'label' => 'اینستاگرام', 'url' => '', 'icon' => '', 'color' => '#e1306c', 'enabled' => 1 ),
+				array( 'platform' => 'telegram', 'label' => 'تلگرام', 'url' => '', 'icon' => '', 'color' => '#229ed9', 'enabled' => 1 ),
+				array( 'platform' => 'whatsapp', 'label' => 'واتس‌اپ', 'url' => '', 'icon' => '', 'color' => '#25d366', 'enabled' => 1 ),
+			),
 
 			/* Ticket extras ------------------------------------------------------ */
 			'ticket_departments_visible' => 1,
 			'ticket_hidden_departments'  => array(),
 			'ticket_allow_close'  => 1,
 			'ticket_allow_cancel' => 1,
-			'ticket_faq_enabled'  => 1,
 			'ticket_faq_gate'     => 1,
 			'ticket_faq_intro'    => 'قبل از ثبت تیکت، لطفاً پرسش‌های متداول و آموزش‌های زیر را مطالعه کنید.',
 			'ticket_faq_items'    => array(
@@ -219,6 +221,7 @@ class VTD_Options {
 			'ticket_sms_admin_phone'  => '',
 			'ticket_sms_pattern_created' => '',
 			'ticket_sms_pattern_reply'   => '',
+			'ticket_sms_pattern_closed'  => '',
 			'ticket_department_staff' => array(),
 			'ticket_staff_by_role'    => 1,
 			'ticket_department_assign' => array(),
@@ -233,7 +236,7 @@ class VTD_Options {
 
 			/* Auth extras -------------------------------------------------------- */
 			'forgot_password'     => 1,
-			'username_is_national_code' => 0,
+			'username_is_national_code' => 1,
 			'register_national_code'    => 1,
 			'display_name_format' => 'full_name',
 			'national_code_meta'  => 'national_code',
@@ -247,6 +250,19 @@ class VTD_Options {
 			$stored = get_option( VTD_OPTION_KEY, array() );
 			$stored = is_array( $stored ) ? $stored : array();
 			self::$cache = wp_parse_args( $stored, self::defaults() );
+			if ( ! array_key_exists( 'social_links', $stored ) && ! empty( $stored['social_icons'] ) ) {
+				self::$cache['social_links'] = array();
+				foreach ( (array) $stored['social_icons'] as $social ) {
+					$social = wp_parse_args( (array) $social, array( 'network' => 'custom', 'label' => '', 'url' => '', 'color' => '', 'enabled' => 1 ) );
+					self::$cache['social_links'][] = array( 'platform' => 'twitter' === $social['network'] ? 'twitter' : $social['network'], 'label' => $social['label'], 'url' => $social['url'], 'color' => $social['color'], 'enabled' => $social['enabled'], 'icon_url' => $social['icon_url'] ?? '' );
+				}
+			}
+			if ( ! array_key_exists( 'copyright_text', $stored ) && array_key_exists( 'footer_copyright', $stored ) ) {
+				self::$cache['copyright_text'] = (string) $stored['footer_copyright'];
+			}
+			if ( ! array_key_exists( 'copyright_enabled', $stored ) && array_key_exists( 'footer_copyright_enabled', $stored ) ) {
+				self::$cache['copyright_enabled'] = (int) $stored['footer_copyright_enabled'];
+			}
 		}
 		return self::$cache;
 	}

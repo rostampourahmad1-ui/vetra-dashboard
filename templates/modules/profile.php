@@ -9,6 +9,7 @@ defined( 'ABSPATH' ) || exit;
 
 $vtd_readonly = VTD_Options::get( 'profile_readonly_mode', 0 );
 $vtd_change_request = VTD_Options::get( 'profile_change_request', 0 );
+$vtd_change_fields = VTD_Changes::editable_fields();
 ?>
 <div class="vtd-profile">
 	<section class="vtd-card vtd-profile-head">
@@ -36,6 +37,9 @@ $vtd_change_request = VTD_Options::get( 'profile_change_request', 0 );
 
 	<section class="vtd-card">
 		<h3><?php esc_html_e( 'Personal details', 'vetra-dashboard' ); ?></h3>
+		<?php if ( ! empty( $change_notice ) ) : ?>
+			<div class="vtd-alert vtd-alert-info"><?php echo esc_html( $change_notice ); ?></div>
+		<?php endif; ?>
 		<?php if ( $vtd_readonly ) : ?>
 			<div class="vtd-alert vtd-alert-info">
 				<?php esc_html_e( 'Your profile information is read-only. To change any details, please submit a change request with supporting documents below.', 'vetra-dashboard' ); ?>
@@ -51,12 +55,16 @@ $vtd_change_request = VTD_Options::get( 'profile_change_request', 0 );
 				<input type="text" name="last_name" value="<?php echo esc_attr( $data['last_name'] ); ?>" <?php echo $vtd_readonly ? 'readonly' : ''; ?>>
 			</label>
 			<label class="vtd-field">
+				<span><?php esc_html_e( 'Username', 'vetra-dashboard' ); ?></span>
+				<input type="text" value="<?php echo esc_attr( $data['username'] ); ?>" readonly dir="ltr">
+			</label>
+			<label class="vtd-field">
 				<span><?php esc_html_e( 'Email', 'vetra-dashboard' ); ?></span>
 				<input type="email" name="email" value="<?php echo esc_attr( $data['email'] ); ?>" <?php echo ( $vtd_readonly || VTD_Options::get( 'profile_confirm_email', 1 ) ) ? 'readonly' : ''; ?>>
 			</label>
 			<label class="vtd-field">
 				<span><?php esc_html_e( 'Mobile', 'vetra-dashboard' ); ?></span>
-				<input type="tel" inputmode="numeric" pattern="[0-9]*" name="phone" value="<?php echo esc_attr( $data['phone'] ); ?>" <?php echo ( $vtd_readonly || VTD_Options::get( 'profile_confirm_phone', 1 ) ) ? 'readonly' : ''; ?>>
+				<input type="tel" inputmode="numeric" pattern="[0-9۰-۹٠-٩]*" autocomplete="tel-national" name="phone" value="<?php echo esc_attr( $data['phone'] ); ?>" <?php echo ( $vtd_readonly || VTD_Options::get( 'profile_confirm_phone', 1 ) ) ? 'readonly' : ''; ?> <?php echo $vtd_readonly && $vtd_change_request ? 'data-vtd-phone-change' : ''; ?>>
 			</label>
 			<label class="vtd-field">
 				<span><?php esc_html_e( 'Gender', 'vetra-dashboard' ); ?></span>
@@ -66,9 +74,13 @@ $vtd_change_request = VTD_Options::get( 'profile_change_request', 0 );
 					<option value="female" <?php selected( $data['gender'], 'female' ); ?>><?php esc_html_e( 'Female', 'vetra-dashboard' ); ?></option>
 				</select>
 			</label>
-			<div class="vtd-field">
-				<label for="vtd-profile-birthday"><span>تاریخ تولد</span></label>
+		<div class="vtd-field">
+			<label for="vtd-profile-birthday"><span>تاریخ تولد</span></label>
+			<?php if ( $vtd_readonly ) : ?>
+				<output class="vtd-readonly-value"><?php echo esc_html( $data['birthday'] ? vtd_date_i18n( $data['birthday'] ) : '—' ); ?></output>
+			<?php else : ?>
 				<?php echo vtd_jalali_date_input( 'birthday', $data['birthday'], false, 'vtd-profile-birthday' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			<?php endif; ?>
 			</div>
 			<label class="vtd-field vtd-field-full">
 				<span><?php esc_html_e( 'About', 'vetra-dashboard' ); ?></span>
@@ -79,7 +91,11 @@ $vtd_change_request = VTD_Options::get( 'profile_change_request', 0 );
 				<?php if ( 'date' === $field['type'] ) : ?>
 					<div class="vtd-field">
 						<label for="vtd-profile-field-<?php echo esc_attr( $slug ); ?>"><span><?php echo esc_html( $field['label'] ); ?></span></label>
-						<?php echo vtd_jalali_date_input( $slug, $data[ $slug ] ?? '', $field['required'], 'vtd-profile-field-' . $slug ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<?php if ( $vtd_readonly ) : ?>
+							<output class="vtd-readonly-value"><?php echo esc_html( ! empty( $data[ $slug ] ) ? vtd_date_i18n( $data[ $slug ] ) : '—' ); ?></output>
+						<?php else : ?>
+							<?php echo vtd_jalali_date_input( $slug, $data[ $slug ] ?? '', $field['required'], 'vtd-profile-field-' . $slug ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<?php endif; ?>
 					</div>
 				<?php else : ?>
 					<label class="vtd-field">
@@ -92,7 +108,7 @@ $vtd_change_request = VTD_Options::get( 'profile_change_request', 0 );
 								<?php endforeach; ?>
 							</select>
 						<?php else : ?>
-							<input type="<?php echo esc_attr( $field['type'] ); ?>" inputmode="<?php echo 'tel' === $field['type'] ? 'numeric' : ''; ?>" name="<?php echo esc_attr( $slug ); ?>" value="<?php echo esc_attr( $data[ $slug ] ?? '' ); ?>" <?php echo $field['required'] ? 'required' : ''; ?> <?php echo $vtd_readonly ? 'readonly' : ''; ?>>
+							<input type="<?php echo esc_attr( $field['type'] ); ?>" inputmode="<?php echo in_array( $field['type'], array( 'tel', 'number' ), true ) ? 'numeric' : ''; ?>" pattern="<?php echo 'tel' === $field['type'] ? '[0-9۰-۹٠-٩]*' : ''; ?>" name="<?php echo esc_attr( $slug ); ?>" value="<?php echo esc_attr( $data[ $slug ] ?? '' ); ?>" <?php echo $field['required'] ? 'required' : ''; ?> <?php echo $vtd_readonly ? 'readonly' : ''; ?>>
 						<?php endif; ?>
 					</label>
 				<?php endif; ?>
@@ -107,7 +123,7 @@ $vtd_change_request = VTD_Options::get( 'profile_change_request', 0 );
 		</form>
 	</section>
 
-	<?php if ( $vtd_readonly && $vtd_change_request ) : ?>
+	<?php if ( $vtd_change_request ) : ?>
 		<section class="vtd-card vtd-change-request">
 			<h3><?php esc_html_e( 'Request information change', 'vetra-dashboard' ); ?></h3>
 			<p class="vtd-muted"><?php esc_html_e( 'Submit a request to change your personal information. An administrator will review your request and may ask for supporting documents.', 'vetra-dashboard' ); ?></p>
@@ -117,33 +133,53 @@ $vtd_change_request = VTD_Options::get( 'profile_change_request', 0 );
 				<div class="vtd-form-grid">
 					<label class="vtd-field">
 						<span><?php esc_html_e( 'Field to change', 'vetra-dashboard' ); ?></span>
-						<select name="change_field" required>
+						<select name="change_field" data-vtd-change-field required>
 							<option value=""><?php esc_html_e( 'Select field', 'vetra-dashboard' ); ?></option>
-							<option value="first_name"><?php esc_html_e( 'First name', 'vetra-dashboard' ); ?></option>
-							<option value="last_name"><?php esc_html_e( 'Last name', 'vetra-dashboard' ); ?></option>
-							<option value="email"><?php esc_html_e( 'Email', 'vetra-dashboard' ); ?></option>
-							<option value="phone"><?php esc_html_e( 'Mobile', 'vetra-dashboard' ); ?></option>
-							<option value="gender"><?php esc_html_e( 'Gender', 'vetra-dashboard' ); ?></option>
-							<option value="birthday"><?php esc_html_e( 'Birthday', 'vetra-dashboard' ); ?></option>
+							<?php foreach ( $vtd_change_fields as $vtd_field_key => $vtd_field_label ) : ?>
+								<option value="<?php echo esc_attr( $vtd_field_key ); ?>"><?php echo esc_html( $vtd_field_label ); ?></option>
+							<?php endforeach; ?>
 						</select>
 					</label>
 					<label class="vtd-field">
 						<span><?php esc_html_e( 'New value', 'vetra-dashboard' ); ?></span>
-						<input type="text" name="change_value" required>
+						<input type="text" name="change_value" data-vtd-change-value required>
 					</label>
 				</div>
 				<label class="vtd-field">
 					<span><?php esc_html_e( 'Reason for change', 'vetra-dashboard' ); ?></span>
 					<textarea name="change_reason" rows="3" required></textarea>
 				</label>
-				<label class="vtd-field">
-					<span><?php esc_html_e( 'Supporting document (optional)', 'vetra-dashboard' ); ?></span>
-					<input type="file" name="change_document" accept=".jpg,.jpeg,.png,.pdf">
+			<label class="vtd-field">
+				<span><?php echo VTD_Options::get( 'profile_change_require_docs', 1 ) ? 'مدارک پشتیبان (الزامی)' : 'مدارک پشتیبان (اختیاری)'; ?></span>
+				<input type="file" name="change_docs[]" accept=".jpg,.jpeg,.png,.pdf" multiple <?php echo VTD_Options::get( 'profile_change_require_docs', 1 ) ? 'required' : ''; ?>>
 				</label>
 				<div class="vtd-form-actions">
 					<button type="submit" class="vtd-btn vtd-btn-primary"><?php esc_html_e( 'Submit request', 'vetra-dashboard' ); ?></button>
 				</div>
 			</form>
+			<?php if ( ! empty( $change_requests ) ) : ?>
+				<div class="vtd-change-request-list">
+					<h4>درخواست‌های ثبت‌شده</h4>
+					<?php foreach ( $change_requests as $vtd_request ) : ?>
+						<article class="vtd-change-request-item">
+							<div><strong><?php echo esc_html( $vtd_request->field_label ); ?></strong><span class="vtd-pill"><?php echo esc_html( VTD_Changes::status_label( $vtd_request->status ) ); ?> · <?php echo esc_html( $vtd_request->stage ); ?></span></div>
+							<p class="vtd-muted">مقدار درخواستی: <?php echo esc_html( $vtd_request->new_value ); ?></p>
+							<?php if ( $vtd_request->docs_request ) : ?><p><?php echo esc_html( $vtd_request->docs_request ); ?></p><?php endif; ?>
+							<?php echo VTD_Changes::docs_html( $vtd_request ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							<?php if ( 'pending' === $vtd_request->status && 'docs_requested' === $vtd_request->stage ) : ?>
+								<form method="post" enctype="multipart/form-data" class="vtd-form vtd-change-doc-upload">
+									<input type="hidden" name="vtd_action" value="profile_submit_docs"><input type="hidden" name="request_id" value="<?php echo (int) $vtd_request->request_id; ?>">
+									<?php wp_nonce_field( 'vtd_change_request', 'vtd_change_request_nonce' ); ?>
+									<label class="vtd-field"><span>بارگذاری مدارک تکمیلی</span><input type="file" name="change_docs[]" accept=".jpg,.jpeg,.png,.pdf" multiple required></label>
+									<button class="vtd-btn vtd-btn-outline" type="submit">ارسال مدارک</button>
+								</form>
+							<?php elseif ( 'pending' === $vtd_request->status && 'physical_requested' === $vtd_request->stage ) : ?>
+								<p class="vtd-alert vtd-alert-info">برای ادامه بررسی، مدارک فیزیکی را طبق هماهنگی به پشتیبانی تحویل دهید.</p>
+							<?php endif; ?>
+						</article>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
 		</section>
 	<?php endif; ?>
 

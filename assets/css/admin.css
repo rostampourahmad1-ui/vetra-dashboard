@@ -369,3 +369,22 @@
 	.vtd-menu-builder-main { grid-template-columns: 1fr 1fr; }
 	.vtd-menu-builder-details { grid-template-columns: 1fr; }
 }
+
+.vtd-settings-table .vtd-social-row,
+.vtd-settings-table .vtd-dashboard-card-row { grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); }
+.vtd-settings-table .vtd-repeater-row input[type="url"],
+.vtd-settings-table .vtd-repeater-row textarea { width: 100%; min-width: 0; min-height: 36px; padding: 7px 9px; border: 1px solid #dfe4ed; border-radius: 8px; font-family: inherit; font-size: 12px; }
+.vtd-staff-assignment { display: grid; gap: 10px; }
+.vtd-staff-assign-row { display: grid; grid-template-columns: minmax(120px, .6fr) minmax(0, 1.4fr); align-items: center; gap: 10px; padding: 10px; border: 1px solid #edf0f5; border-radius: 10px; background: #fafbfe; }
+.vtd-staff-assign-row select { width: 100%; min-width: 0 !important; }
+.vtd-admin-wrap .vtd-change-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.vtd-change-admin-row { display: grid; min-width: 220px; gap: 6px; }
+.vtd-change-admin-row select, .vtd-change-admin-row textarea { width: 100%; min-width: 0; }
+.vtd-change-admin-row textarea { padding: 7px; border: 1px solid #dfe4ed; border-radius: 8px; font-family: inherit; }
+.vtd-change-admin-row .button { justify-self: start; }
+
+@media (max-width: 782px) {
+	.vtd-settings-table .vtd-social-row,
+	.vtd-settings-table .vtd-dashboard-card-row { grid-template-columns: 1fr 1fr; }
+	.vtd-staff-assign-row { grid-template-columns: 1fr; }
+}

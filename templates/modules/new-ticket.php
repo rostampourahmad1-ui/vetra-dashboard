@@ -9,45 +9,56 @@ defined( 'ABSPATH' ) || exit;
 
 $faq_enabled = $faq_enabled ?? VTD_Options::get( 'ticket_faq_enabled', 1 );
 $faq_content = $faq_content ?? VTD_Options::get( 'ticket_faq_content', '' );
+$faq_gate = $faq_gate ?? VTD_Options::get( 'ticket_faq_gate', 1 );
+$faq_intro = $faq_intro ?? VTD_Options::get( 'ticket_faq_intro', '' );
+$faq_items = $faq_items ?? (array) VTD_Options::get( 'ticket_faq_items', array() );
+$faq_links = $faq_links ?? (array) VTD_Options::get( 'ticket_faq_links', array() );
+$faq_required = $faq_enabled && $faq_gate && ( $faq_content || $faq_items || $faq_links );
 ?>
-<?php if ( $faq_enabled && $faq_content ) : ?>
+<?php echo VTD_Tickets::notices_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+<?php if ( $faq_required ) : ?>
 <div class="vtd-card vtd-ticket-faq" data-vtd-faq-step>
 	<h3><?php esc_html_e( 'Before submitting a ticket', 'vetra-dashboard' ); ?></h3>
-	<div class="vtd-faq-content">
-		<?php echo wp_kses_post( $faq_content ); ?>
-	</div>
+	<?php if ( $faq_intro ) : ?><p class="vtd-muted"><?php echo esc_html( $faq_intro ); ?></p><?php endif; ?>
+	<?php if ( $faq_content ) : ?><div class="vtd-faq-content"><?php echo wp_kses_post( $faq_content ); ?></div><?php endif; ?>
+	<?php if ( $faq_items ) : ?>
+		<div class="vtd-faq-list">
+			<?php foreach ( $faq_items as $faq_item ) : ?>
+				<?php $faq_item = wp_parse_args( (array) $faq_item, array( 'question' => '', 'answer' => '', 'url' => '' ) ); ?>
+				<?php if ( $faq_item['question'] || $faq_item['answer'] ) : ?>
+					<details><summary><?php echo esc_html( $faq_item['question'] ); ?></summary><p><?php echo esc_html( $faq_item['answer'] ); ?></p>
+					<?php if ( $faq_item['url'] ) : ?><a class="vtd-link" href="<?php echo esc_url( $faq_item['url'] ); ?>" target="_blank" rel="noopener">مطالعه راهنما</a><?php endif; ?></details>
+				<?php endif; ?>
+			<?php endforeach; ?>
+		</div>
+	<?php endif; ?>
+	<?php if ( $faq_links ) : ?><nav class="vtd-faq-links" aria-label="لینک‌های آموزشی">
+		<?php foreach ( $faq_links as $faq_link ) : ?>
+			<?php $faq_link = wp_parse_args( (array) $faq_link, array( 'label' => '', 'url' => '' ) ); ?>
+			<?php if ( $faq_link['label'] && $faq_link['url'] ) : ?><a class="vtd-btn vtd-btn-outline" href="<?php echo esc_url( $faq_link['url'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $faq_link['label'] ); ?></a><?php endif; ?>
+		<?php endforeach; ?>
+	</nav><?php endif; ?>
 	<div class="vtd-faq-actions">
 		<label class="vtd-checkbox-label">
 			<input type="checkbox" data-vtd-faq-confirm>
-			<span><?php esc_html_e( 'I have read the FAQ and tutorial, and I understand.', 'vetra-dashboard' ); ?></span>
+			<span>مطالعه کردم و مشکل من در موارد بالا ذکر نشده است.</span>
 		</label>
-		<button type="button" class="vtd-btn vtd-btn-primary" data-vtd-faq-continue disabled><?php esc_html_e( 'Continue', 'vetra-dashboard' ); ?></button>
+		<button type="button" class="vtd-btn vtd-btn-primary" data-vtd-faq-continue disabled>متوجه شدم؛ ادامه ثبت تیکت</button>
 	</div>
 </div>
-<script>
-(function(){
-	var faqStep = document.querySelector('[data-vtd-faq-step]');
-	if (!faqStep) return;
-	var confirm = faqStep.querySelector('[data-vtd-faq-confirm]');
-	var continueBtn = faqStep.querySelector('[data-vtd-faq-continue]');
-	var formCard = faqStep.nextElementSibling;
-	if (formCard) formCard.style.display = 'none';
-	confirm.addEventListener('change', function(){
-		continueBtn.disabled = !confirm.checked;
-	});
-	continueBtn.addEventListener('click', function(){
-		if (confirm.checked) {
-			faqStep.style.display = 'none';
-			if (formCard) formCard.style.display = '';
-		}
-	});
-})();
-</script>
 <?php endif; ?>
 <div class="vtd-card">
 	<h3><?php esc_html_e( 'Submit a new ticket', 'vetra-dashboard' ); ?></h3>
 	<form class="vtd-form" method="post" enctype="multipart/form-data" data-vtd-ticket-form>
 		<input type="hidden" name="vtd_ticket_action" value="create">
+		<?php if ( $faq_required ) : ?>
+			<label class="vtd-checkbox-label vtd-faq-fallback-confirm" data-vtd-faq-fallback>
+				<input type="checkbox" name="faq_confirmed" value="1" required>
+				<span>مطالعه کردم و مشکل من در موارد بالا ذکر نشده است.</span>
+			</label>
+		<?php else : ?>
+			<input type="hidden" name="faq_confirmed" value="1">
+		<?php endif; ?>
 		<?php wp_nonce_field( 'vtd_ticket', 'vtd_ticket_nonce' ); ?>
 
 		<label class="vtd-field">

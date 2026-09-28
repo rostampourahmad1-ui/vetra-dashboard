@@ -30,7 +30,7 @@ class VTD_Modules {
 				'tickets'       => array(
 					'label'    => 'سیستم تیکتینگ',
 					'option'   => 'ticket_enabled',
-					'sections' => array( 'tickets', 'new-ticket', 'ticket', 'staff-tickets' ),
+					'sections' => array( 'tickets', 'new-ticket', 'ticket', 'staff-tickets', 'support-center' ),
 				),
 				'notifications' => array(
 					'label'    => 'اعلان‌ها',

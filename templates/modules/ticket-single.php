@@ -11,6 +11,7 @@ $cancel_enabled = $cancel_enabled ?? VTD_Options::get( 'ticket_cancel_enabled', 
 $rating_enabled = $rating_enabled ?? VTD_Options::get( 'ticket_rating', 1 );
 ?>
 <div class="vtd-ticket-single" data-vtd-ticket="<?php echo (int) $ticket->ticket_id; ?>">
+	<?php echo VTD_Tickets::notices_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	<section class="vtd-card vtd-ticket-header">
 		<div>
 			<h3><?php echo esc_html( $ticket->ticket_title ); ?> <span class="vtd-muted">#<?php echo (int) $ticket->ticket_id; ?></span></h3>
@@ -22,9 +23,9 @@ $rating_enabled = $rating_enabled ?? VTD_Options::get( 'ticket_rating', 1 );
 		</div>
 		<div class="vtd-ticket-actions">
 			<?php if ( $is_staff ) : ?>
-				<button type="button" class="vtd-btn vtd-btn-outline" data-vtd-ticket-star><?php echo vtd_icon( 'star' ); // phpcs:ignore ?> <?php esc_html_e( 'Star', 'vetra-dashboard' ); ?></button>
+				<button type="button" class="vtd-btn vtd-btn-outline <?php echo ! empty( $ticket->starred ) ? 'is-active' : ''; ?>" data-vtd-ticket-star aria-pressed="<?php echo ! empty( $ticket->starred ) ? 'true' : 'false'; ?>"><?php echo vtd_icon( 'star' ); // phpcs:ignore ?> <?php esc_html_e( 'Star', 'vetra-dashboard' ); ?></button>
 			<?php endif; ?>
-			<?php if ( $cancel_enabled && 'closed' !== $ticket->status && ! $is_staff ) : ?>
+			<?php if ( VTD_Options::get( 'ticket_allow_cancel', $cancel_enabled ) && 'closed' !== $ticket->status && ! $is_staff ) : ?>
 				<form method="post" style="display:inline">
 					<?php wp_nonce_field( 'vtd_ticket', 'vtd_ticket_nonce' ); ?>
 					<input type="hidden" name="vtd_ticket_action" value="cancel">
@@ -32,7 +33,7 @@ $rating_enabled = $rating_enabled ?? VTD_Options::get( 'ticket_rating', 1 );
 					<button type="submit" class="vtd-btn vtd-btn-danger" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to cancel this ticket?', 'vetra-dashboard' ); ?>')"><?php esc_html_e( 'Cancel ticket', 'vetra-dashboard' ); ?></button>
 				</form>
 			<?php endif; ?>
-			<?php if ( $cancel_enabled && 'closed' !== $ticket->status ) : ?>
+			<?php if ( VTD_Options::get( 'ticket_allow_close', $cancel_enabled ) && 'closed' !== $ticket->status ) : ?>
 				<form method="post" style="display:inline">
 					<?php wp_nonce_field( 'vtd_ticket', 'vtd_ticket_nonce' ); ?>
 					<input type="hidden" name="vtd_ticket_action" value="close">

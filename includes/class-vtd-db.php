@@ -86,10 +86,6 @@ class VTD_DB {
 		return self::table( 'otp' );
 	}
 
-	public static function change_requests() {
-		return self::table( 'change_requests' );
-	}
-
 	public static function schema() {
 		global $wpdb;
 		$charset = $wpdb->get_charset_collate();
